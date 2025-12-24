@@ -81,7 +81,7 @@ def get_exploit_checklist(v):
     elif 2.00 <= v <= 2.70:
         ex.update({"Webkit": "✅", "BD-JB": "❌", "mast1c0re": "✅", "Lua": "✅", "Y2JB": "❌", "Netflix": "❌"})
     elif 3.00 <= v <= 3.20:
-        ex.update({"Webkit": "✅", "BD-JB": "✅", "mast1c0re": "✅", "Lua": "✅", "Y2JB": "✅", "Netflix": "❌"})
+        ex.update({"Webkit": "✅", "BD-JB": "✅", "mast1c0re": "✅", "Lua": "✅", "Y2JB": "❌", "Netflix": "❌"})
     elif 4.00 <= v <= 4.51:
         ex.update({"Webkit": "✅", "BD-JB": "✅", "mast1c0re": "✅", "Lua": "✅", "Y2JB": "✅", "Netflix": "✅"})
     elif 5.00 <= v <= 5.50:
@@ -146,8 +146,8 @@ def format_version_status(version_str):
     state = "SUPPORT ✅" if has_supported and not has_unsupported else "UNSUPPORTED ❌" if has_unsupported and not has_supported else "CHANCE ⚠️"
     return " / ".join(formatted_list), min_v, state
 
-# دالة الفحص (تختصر الرد في المجموعات)
-def process_serial_check(user_text, is_group=False):
+# دالة الفحص (تمت إعادة الرد الكامل للجميع)
+def process_serial_check(user_text):
     user_text = user_text.upper().strip()
     found_v = None
     search_key = f"S01-X{user_text.split('-')[1][1:]}" if user_text.startswith("S01-") and len(user_text)>=8 else user_text
@@ -167,37 +167,33 @@ def process_serial_check(user_text, is_group=False):
     mod, date = get_console_model_and_date(search_key)
     loc = get_factory_location(user_text)
 
-    # الرد المختصر
-    res = f"🎮 <b>PS5 CHECKER</b>\n"
-    res += f"📦 <b>Serial:</b> {user_text}\n"
-    res += f"🔢 <b>FW:</b> {f_ver}\n"
-    res += f"📊 <b>Status:</b> {state}\n"
-
-    # إذا مجموعة، توقف هنا
-    if is_group:
-        res += f"\n<i>Send to private for more details.</i>"
-        return res
-
-    # الرد الكامل للخاص
-    res += f"🎮 <b>Model:</b> {mod}\n"
-    if loc: res += f"🏳️ <b>Made in:</b> {loc}\n"
-    res += f"📅 <b>Date:</b> {date}\n\n"
+    # الرد الكامل (دائماً)
+    res = f"𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮\n\n"
+    res += f"𝐒𝐞𝐫𝐢𝐚𝐥 📦:\n{user_text}\n"
+    res += f"𝐅𝐢𝐫𝐦𝐰𝐚𝐫𝐞 🔢:\n{f_ver}\n"
+    res += f"𝐌𝐨𝐝𝐞𝐥 🎮 :\n{mod}\n"
+    if loc: res += f"𝐌𝐚𝐝𝐞 𝐢𝐧 🏳️ :\n{loc}\n"
+    res += f"𝐃𝐚𝐭𝐞 𝐨𝐟 𝐩𝐫𝐨𝐝𝐮𝐜𝐭𝐢𝐨𝐧 📅 :\n{date}\n"
+    res += f"𝐒𝐭𝐚𝐭𝐮𝐬 📊:\n{state}\n\n"
 
     if "UNSUPPORTED" not in state:
-        res += "🔓 <b>Exploits:</b>\n╭─────────────╮\n"
+        res += "𝐄𝐱𝐩𝐥𝐨𝐢𝐭 𝐀𝐯𝐚𝐢𝐥𝐚𝐛𝐢𝐥𝐢𝐭𝐲 🔓:\n╭─────────────╮\n"
         res += f"│ 🌐 Webkit : {ex['Webkit']}\n│ 💿 BD-JB  : {ex['BD-JB']}\n│ 🎮 mast1c : {ex['mast1c0re']}\n│ 🐍 Lua : {ex['Lua']}\n│ ☕ Y2JB   : {ex['Y2JB']}\n│ 📺 Netflix: {ex['Netflix']}\n╰─────────────╯\n\n"
     
-    res += "By:<a href='https://x.com/vaz3m?s=21'>@vAz3m</a>"
+    res += "By:<a href='https://x.com/vaz3m?s=21'>@vAz3m</a>\nThank You <a href='https://x.com/qtr_703?s=21'>@qtr_703</a>"
     return res
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_type = update.message.chat.type
     is_group = chat_type in ['group', 'supergroup']
 
-    # إذا الأمر يحتوي على سيريال (مثال /check S01...)
+    if is_group:
+        if '/start' in update.message.text: return 
+        
     if context.args:
         serial_to_check = " ".join(context.args)
-        result_text = process_serial_check(serial_to_check, is_group=is_group)
+        # إرسال للسيريال للدالة (ترجع الرد الكامل دائماً)
+        result_text = process_serial_check(serial_to_check)
         if result_text:
             await update.message.reply_text(result_text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
             return
@@ -206,7 +202,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                  await update.message.reply_text("⚠️ Serial not found")
              return
 
-    # إذا كان فقط /start أو /check بدون سيريال
+    # رسالة الترحيب
     welcome_msg = (
         "𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮\n\n"
         "📥 <b>Send Serial Number (S01-XXXX)</b>\n"
@@ -221,32 +217,37 @@ async def analyze_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     bot_username = context.bot.username.upper() if context.bot.username else ""
 
-    # 1. تنظيف النص من المنشن (إذا وجد) للحصول على السيريال المحتمل
-    # مثال: @BotName S01-XXXX  --> S01-XXXX
-    clean_text = raw_text.replace(f"@{bot_username}", "").strip()
-
-    # 2. هل النص يبدأ بنمط السيريال المعروف؟ (S01, AJ, F, AK)
-    # هذا يسمح بالكشف عن السيريال حتى لو لم يكن هناك منشن
-    potential_serial = False
-    if clean_text.startswith(("S01-", "AJ", "F", "AK")) and len(clean_text) > 4:
-        potential_serial = True
+    if is_group:
+        clean_text = raw_text.replace(f"@{bot_username}", "").strip()
+        potential_serial = False
+        # الكشف عن السيريال المباشر في المجموعات (بدون منشن)
+        if clean_text.startswith(("S01-", "AJ", "F", "AK")) and len(clean_text) > 4:
+            potential_serial = True
         
-    # 3. المنطق
-    if potential_serial:
-        # إذا وجدنا سيريال، نفحصه مباشرة (سواء مع منشن أو بدون)
-        result_text = process_serial_check(clean_text, is_group=is_group)
+        if potential_serial:
+            # تم العثور على سيريال -> افحصه ورد بالكامل
+            result_text = process_serial_check(clean_text)
+            if result_text:
+                await update.message.reply_text(result_text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+            return
+
+        # إذا لم يكن سيريال، وتوجد منشن -> ترحيب
+        if f"@{bot_username}" in raw_text:
+            welcome_msg = (
+                f"Welcome! 👋\nSend me the PS5 Serial Number to check it.\n"
+                f"ارسل السيريال نمبر للفحص."
+            )
+            await update.message.reply_text(welcome_msg)
+            return
+    else:
+        # في الخاص، النص هو السيريال مباشرة
+        user_text = raw_text
+        result_text = process_serial_check(user_text)
+        
         if result_text:
             await update.message.reply_text(result_text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
-            return
-    
-    # 4. إذا لم يكن سيريال، ولكن تم عمل منشن للبوت
-    if f"@{bot_username}" in raw_text:
-        # رد بالترحيب
-        welcome_msg = (
-            f"Welcome! 👋\nSend me the PS5 Serial Number to check it.\n"
-            f"ارسل السيريال نمبر للفحص."
-        )
-        await update.message.reply_text(welcome_msg)
+        else:
+            await update.message.reply_text("⚠️ Serial not found")
 
 if __name__ == '__main__':
     keep_alive()
