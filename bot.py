@@ -16,7 +16,7 @@ logging.basicConfig(
 )
 
 # ==========================================
-# 📂 قاعدة البيانات (Database)
+# 📂 قاعدة البيانات
 # ==========================================
 PS5_DB = {
     "S01-1355": "1.02", "S01-0272": "2.00", "S01-0376": "2.30", "S01-1517": "3.20",
@@ -77,7 +77,7 @@ def get_exploit_checklist(v):
     elif 2.00 <= v <= 2.70:
         ex.update({"Webkit": "✅", "BD-JB": "❌", "mast1c0re": "✅", "Lua": "✅", "Y2JB": "❌", "Netflix": "❌"})
     elif 3.00 <= v <= 3.20:
-        ex.update({"Webkit": "✅", "BD-JB": "✅", "mast1c0re": "✅", "Lua": "✅", "Y2JB": "❌", "Netflix": "❌"})
+        ex.update({"Webkit": "✅", "BD-JB": "✅", "mast1c0re": "✅", "Lua": "✅", "Y2JB": "✅", "Netflix": "❌"})
     elif 4.00 <= v <= 4.51:
         ex.update({"Webkit": "✅", "BD-JB": "✅", "mast1c0re": "✅", "Lua": "✅", "Y2JB": "✅", "Netflix": "✅"})
     elif 5.00 <= v <= 5.50:
@@ -138,11 +138,17 @@ def format_version_status(version_str):
                 formatted_list.append(f"{v_clean} ❌") 
                 has_unsupported = True
         except: formatted_list.append(f"{v_raw} ❓")
-
+    
     state = "SUPPORT ✅" if has_supported and not has_unsupported else "UNSUPPORTED ❌" if has_unsupported and not has_supported else "CHANCE ⚠️"
     return " / ".join(formatted_list), min_v, state
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # 👇👇 التعديل الجديد: في المجموعات، تجاهل /start فقط 👇👇
+    if update.message.chat.type in ['group', 'supergroup']:
+        if '/start' in update.message.text:
+            return # توقف ولا ترد
+        # إذا كان الأمر هو /check سيكمل الكود وينفذ الرد
+    
     welcome_msg = (
         "𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮\n\n"
         "📥 <b>Send the Serial Number found on the bottom of the box.</b>\n"
@@ -157,18 +163,39 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(welcome_msg, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
 
 async def analyze_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_text = update.message.text.upper().strip()
+    # 1. تجهيز النص ونوع المحادثة
+    raw_text = update.message.text.upper().strip()
+    chat_type = update.message.chat.type
+    bot_username = context.bot.username.upper() if context.bot.username else ""
+
+    # 2. شرط المجموعات: تجاهل الرسالة إذا لم يتم مناداة البوت
+    if chat_type in ['group', 'supergroup']:
+        if f"@{bot_username}" not in raw_text:
+            return  # تجاهل الرسالة
+        
+        # 3. تنظيف النص: حذف اليوزر نيم ليبقى السيريال فقط
+        clean_parts = [word for word in raw_text.split() if "@" not in word]
+        if clean_parts:
+            user_text = clean_parts[0]
+        else:
+            return 
+    else:
+        user_text = raw_text
+
     found_v = None
     search_key = f"S01-X{user_text.split('-')[1][1:]}" if user_text.startswith("S01-") and len(user_text)>=8 else user_text
-
+    
     sorted_keys = sorted(PS5_DB.keys(), key=len, reverse=True)
     for k in sorted_keys:
         if search_key.startswith(k): found_v = PS5_DB[k]; break
     if not found_v:
         for k in sorted_keys:
             if user_text.startswith(k): found_v = PS5_DB[k]; break
-
+            
     if not found_v:
+        # في المجموعات، لا ترد إذا السيريال خطأ (لتجنب الإزعاج)
+        if chat_type in ['group', 'supergroup']:
+            return 
         await update.message.reply_text("⚠️ Serial not found / السيريال غير معروف")
         return
 
@@ -184,13 +211,16 @@ async def analyze_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if "UNSUPPORTED" not in state:
         res += "𝐄𝐱𝐩𝐥𝐨𝐢𝐭 𝐀𝐯𝐚𝐢𝐥𝐚𝐛𝐢𝐥𝐢𝐭𝐲 🔓:\n╭─────────────╮\n"
         res += f"│ 🌐 Webkit : {ex['Webkit']}\n│ 💿 BD-JB  : {ex['BD-JB']}\n│ 🎮 mast1c : {ex['mast1c0re']}\n│ 🐍 Lua : {ex['Lua']}\n│ ☕ Y2JB   : {ex['Y2JB']}\n│ 📺 Netflix: {ex['Netflix']}\n╰─────────────╯\n\n"
-
+    
     res += "By:<a href='https://x.com/vaz3m?s=21'>@vAz3m</a>\nThank You <a href='https://x.com/qtr_703?s=21'>@qtr_703</a>"
     await update.message.reply_text(res, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
 
 if __name__ == '__main__':
     keep_alive()
     app = ApplicationBuilder().token(TOKEN).build()
-    app.add_handler(CommandHandler('start', start))
+    
+    # يستجيب لـ /start و /check بنفس الدالة، لكن الدالة ستفلتر /start في المجموعات
+    app.add_handler(CommandHandler(['start', 'check'], start))
+    
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), analyze_message))
     app.run_polling()
