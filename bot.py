@@ -52,7 +52,7 @@ PS5_DB = {
     "S01-X449": "9.60/10.00/10.01", "S01-X44A": "9.60/10.01/10.20",
     "S01-X44B": "10.20", "S01-X44C": "10.20/10.40",
     "S01-X451": "10.40", "S01-X452": "10.40/10.60", "S01-X453": "10.40/10.60",
-    "S01-X454": "10.60/11.00", "S01-X455": "11.00/11.20", "S01-X156": "11.20",
+    "S01-X454": "10.60/11.00", "S01-X455": "11.00/11.20", "S01-X456": "11.20",
     "S01-X457": "11.20/11.40", "S01-X458": "11.40/11.60", "S01-X459": "11.60",
     "S01-X45A": "11.60/12.00",
     "S01-X556": "11.20", "S01-X557": "11.20/11.40", "S01-X558": "11.40/11.60",
@@ -203,9 +203,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         result_text = process_serial_check(serial_to_check)
         if result_text:
             sent_msg = await update.message.reply_text(result_text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
-            # ⏳ جدولة الحذف بعد 60 ثانية إذا كان في مجموعة
+            # ⏳ جدولة الحذف بعد 30 دقيقة (1800 ثانية) إذا كان في مجموعة
             if is_group:
-                context.job_queue.run_once(delete_msg_job, 60, chat_id=sent_msg.chat_id, data=sent_msg.message_id)
+                context.job_queue.run_once(delete_msg_job, 1800, chat_id=sent_msg.chat_id, data=sent_msg.message_id)
             return
         else:
              if not is_group:
@@ -226,9 +226,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     sent_msg = await update.message.reply_text(welcome_msg, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
     
-    # ⏳ جدولة الحذف بعد 60 ثانية إذا كان في مجموعة
+    # ⏳ جدولة الحذف بعد 30 دقيقة (1800 ثانية) إذا كان في مجموعة
     if is_group:
-        context.job_queue.run_once(delete_msg_job, 60, chat_id=sent_msg.chat_id, data=sent_msg.message_id)
+        context.job_queue.run_once(delete_msg_job, 1800, chat_id=sent_msg.chat_id, data=sent_msg.message_id)
 
 async def analyze_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     raw_text = update.message.text.upper().strip()
@@ -247,8 +247,8 @@ async def analyze_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             result_text = process_serial_check(clean_text)
             if result_text:
                 sent_msg = await update.message.reply_text(result_text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
-                # ⏳ جدولة الحذف بعد 60 ثانية
-                context.job_queue.run_once(delete_msg_job, 60, chat_id=sent_msg.chat_id, data=sent_msg.message_id)
+                # ⏳ جدولة الحذف بعد 30 دقيقة (1800 ثانية)
+                context.job_queue.run_once(delete_msg_job, 1800, chat_id=sent_msg.chat_id, data=sent_msg.message_id)
             return
 
         if f"@{bot_username}" in raw_text:
@@ -264,8 +264,8 @@ async def analyze_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "Thank You <a href='https://x.com/qtr_703?s=21'>@qtr_703</a>"
             )
             sent_msg = await update.message.reply_text(welcome_msg, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
-            # ⏳ جدولة الحذف بعد 60 ثانية
-            context.job_queue.run_once(delete_msg_job, 60, chat_id=sent_msg.chat_id, data=sent_msg.message_id)
+            # ⏳ جدولة الحذف بعد 30 دقيقة (1800 ثانية)
+            context.job_queue.run_once(delete_msg_job, 1800, chat_id=sent_msg.chat_id, data=sent_msg.message_id)
             return
     else:
         # خاص
