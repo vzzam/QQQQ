@@ -180,7 +180,7 @@ def process_serial_check(user_text):
         res += "𝐄𝐱𝐩𝐥𝐨𝐢𝐭 𝐀𝐯𝐚𝐢𝐥𝐚𝐛𝐢𝐥𝐢𝐭𝐲 🔓:\n╭─────────────╮\n"
         res += f"│ 🌐 Webkit : {ex['Webkit']}\n│ 💿 BD-JB  : {ex['BD-JB']}\n│ 🎮 mast1c : {ex['mast1c0re']}\n│ 🐍 Lua : {ex['Lua']}\n│ ☕ Y2JB   : {ex['Y2JB']}\n│ 📺 Netflix: {ex['Netflix']}\n╰─────────────╯\n\n"
     
-    res += "By:<a href='https://x.com/vaz3m?s=21'>@vAz3m</a>\nThank You <a href='https://x.com/qtr_703?s=21'>@qtr_703</a>"
+    </a>\nThank You <a href='https://x.com/qtr_703?s=21'>@qtr_703</a>"
     return res
 
 # 👇👇 دالة الحذف التلقائي 👇👇
@@ -260,7 +260,6 @@ async def analyze_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "<code>S01-X44A</code> | <code>S01-E44A</code>\n"
                 "<code>S01-F148</code> (Pro) | <code>S01-M44A</code>\n"
                 "<code>S01-G44A</code> (Fat)\n\n"
-                "By:<a href='https://x.com/vaz3m?s=21'>@vAz3m</a>\n"
                 "Thank You <a href='https://x.com/qtr_703?s=21'>@qtr_703</a>"
             )
             sent_msg = await update.message.reply_text(welcome_msg, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
