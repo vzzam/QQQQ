@@ -8,7 +8,7 @@ from keep_alive import keep_alive
 # ==========================================
 # 🔴 التوكين الخاص بك
 # ==========================================
-TOKEN = "7976756950:AAEKuCwy2Y_PsqX6KMLZoJE4tORKl3F-uhM"
+TOKEN = "7976756950:AAGDUoAL9duZtNa6FJeMz5NWJeFw10YAN-o"
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
