@@ -6,7 +6,7 @@ from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, Messa
 from keep_alive import keep_alive
 
 # ==========================================
-# 🔴 التوكين الجديد الخاص بك
+# 🔴 التوكين الخاص بك
 # ==========================================
 TOKEN = "7976756950:AAGs4odFu9fABU0nYNUnuCUJyB4QIdINgS4"
 
@@ -19,7 +19,7 @@ logging.basicConfig(
 # 📂 قاعدة البيانات المحدثة (أبريل 2026)
 # ==========================================
 PS5_DB = {
-    # الموديلات القديمة (Fat)
+    # Fat Models
     "S01-1355": "1.02", "S01-0272": "2.00", "S01-0376": "2.30", "S01-1517": "3.20",
     "F1070": "1.00", "F1080": "1.02", "F1090": "1.02", "F10B0": "1.02", "F101B": "2.00", "F1130": "2.50", "F225": "3.20",
     "AJ135": "1.00", "AJ136": "1.00", "AJ137": "1.02", "AJ141": "1.02", "AJ144": "1.02", "AJ145": "1.02", "AJ146": "1.02",
@@ -28,7 +28,7 @@ PS5_DB = {
     "AJ169": "2.70", "AJ171": "2.70", "AJ173": "3.00", "AK396": "3.20", "AK418": "3.21", "AK429": "4.03", "AK399": "4.03", 
     "AK367": "4.50", "AK368": "4.50", "AK436": "5.02", "AK914": "5.10",
     
-    # سلسلة S01-X (Slim / Pro / Fat Newer)
+    # S01-X Series (Slim / Pro / Newer Fat)
     "S01-X214": "2.50/3.00/3.10", "S01-X215": "3.00/3.10", "S01-X216": "3.00/3.10/3.20",
     "S01-X217": "3.20/3.21", "S01-X218": "3.21", "S01-X219": "3.20/3.21/4.00",
     "S01-X21A": "3.20/4.00/4.02/4.03", "S01-X21B": "4.03/4.50", "S01-X21C": "4.50",
@@ -54,7 +54,7 @@ PS5_DB = {
 }
 
 # ==========================================
-# 🛠️ دالة فحص الثغرات
+# 🛠️ الدوال البرمجية
 # ==========================================
 def get_exploit_checklist(v):
     ex = {"Webkit": "❌", "BD-JB": "❌", "mast1c0re": "❌", "Lua": "❌", "Y2JB": "❌", "Netflix": "❌"}
@@ -68,16 +68,11 @@ def get_exploit_checklist(v):
     elif v >= 10.20: ex.update({"mast1c0re": "❗️", "Lua": "✅", "Y2JB": "✅", "Netflix": "✅"})
     return ex
 
-# ==========================================
-# 🛠️ تحليل الموديل والتاريخ
-# ==========================================
 def get_console_model_and_date(serial_normalized):
     if "S01-X" not in serial_normalized: return "Fat (CFI-10)", "Unknown"
     try:
         suffix = serial_normalized.split("S01-X")[1]
         digit_model, digit_year, digit_month = suffix[0], suffix[1], suffix[2]
-        
-        # تحديد الموديل
         model_name = "Unknown"
         if digit_model == '1': model_name = "Pro (CFI-70)"
         elif digit_model == '2': model_name = "Fat (CFI-11)" if digit_year in ['1', '2'] else "Pro (CFI-71)"
@@ -86,31 +81,23 @@ def get_console_model_and_date(serial_normalized):
         elif digit_model == '5': model_name = "Slim (CFI-21)"
         else: model_name = "Fat (CFI-10)"
         
-        # خارطة السنوات (تحديث 2026)
         year_map = {'0':'2020', '1':'2021', '2':'2022', '3':'2023', '4':'2024', '5':'2025', '6':'2026'}
         month_map = {'1':'Jan', '2':'Feb', '3':'Mar', '4':'Apr', '5':'May', '6':'Jun', '7':'Jul', '8':'Aug', '9':'Sep', 'A':'Oct', 'B':'Nov', 'C':'Dec'}
-        
         prod_date = f"{month_map.get(digit_month, 'Unknown')} {year_map.get(digit_year, 'Unknown')}"
         return model_name, prod_date
     except: return "Fat (CFI-10)", "Unknown"
 
-# دالة الفحص الأساسية
 def process_serial_check(user_text):
     user_text = user_text.upper().strip()
     found_v = None
     search_key = f"S01-X{user_text.split('-')[1][1:]}" if user_text.startswith("S01-") and len(user_text)>=8 else user_text
-    
     sorted_keys = sorted(PS5_DB.keys(), key=len, reverse=True)
     for k in sorted_keys:
         if search_key.startswith(k): found_v = PS5_DB[k]; break
-    
     if not found_v: return None
 
-    # تنسيق الإصدار والحالة
     versions = str(found_v).split('/')
-    formatted_list = []
-    min_v = 99.99
-    has_ok, has_no = False, False
+    formatted_list, min_v, has_ok, has_no = [], 99.99, False, False
     for v_raw in versions:
         v_clean = v_raw.strip()
         try:
@@ -128,28 +115,26 @@ def process_serial_check(user_text):
     ex = get_exploit_checklist(min_v)
     mod, date = get_console_model_and_date(search_key)
 
-    res = f"𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮\n\n"
+    res = f"𝐏𝐒𝟓 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮\n\n"
     res += f"𝐒𝐞𝐫𝐢𝐚𝐥 📦: <code>{user_text}</code>\n"
     res += f"𝐅𝐢𝐫𝐦𝐰𝐚𝐫𝐞 🔢: {', '.join(formatted_list)}\n"
     res += f"𝐌𝐨𝐝𝐞𝐥 🎮 : {mod}\n"
     res += f"𝐃𝐚𝐭𝐞 📅 : {date}\n"
     res += f"𝐒𝐭𝐚𝐭𝐮𝐬 📊: <b>{state}</b>\n\n"
-
     if state != "UNSUPPORTED ❌":
         res += "𝐄𝐱𝐩𝐥𝐨𝐢𝐭 𝐀𝐯𝐚𝐢𝐥𝐚𝐛𝐢𝐥𝐢𝐭𝐲 🔓:\n╭─────────────╮\n"
         res += f"│ 🌐 Webkit : {ex['Webkit']}\n│ 💿 BD-JB  : {ex['BD-JB']}\n│ 🎮 mast1c : {ex['mast1c0re']}\n│ 🐍 Lua : {ex['Lua']}\n│ ☕ Y2JB   : {ex['Y2JB']}\n│ 📺 Netflix: {ex['Netflix']}\n╰─────────────╯\n\n"
-    
-    res += "Thank You <a href='https://x.com/qtr_703?s=21'>@qtr_703</a>"
+    res += "<b>by az3m</b>"
     return res
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_msg = (
-        "𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮\n\n"
+        "𝐏𝐒𝟓 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮\n\n"
         "📥 <b>ارسل السيريال نمبر الموجود أسفل كرتون الجهاز.</b>\n"
-        "📝 <b>أمثلة:</b> <code>S01-X44A</code>, <code>S01-F148</code>\n\n"
-        "Thank You <a href='https://x.com/qtr_703?s=21'>@qtr_703</a>"
+        "📝 <b>مثال:</b> <code>S01-X44A</code>\n\n"
+        "<b>by az3m</b>"
     )
-    await update.message.reply_text(welcome_msg, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+    await update.message.reply_text(welcome_msg, parse_mode=ParseMode.HTML)
 
 async def analyze_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     res = process_serial_check(update.message.text)
