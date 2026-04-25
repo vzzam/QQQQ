@@ -146,7 +146,7 @@ def format_version_status(version_str):
     state = "SUPPORT ✅" if has_supported and not has_unsupported else "UNSUPPORTED ❌" if has_unsupported and not has_supported else "CHANCE ⚠️"
     return " / ".join(formatted_list), min_v, state
 
-# دالة الفحص (الرد الكامل)
+# دالة الفحص
 def process_serial_check(user_text):
     user_text = user_text.upper().strip()
     found_v = None
@@ -167,7 +167,6 @@ def process_serial_check(user_text):
     mod, date = get_console_model_and_date(search_key)
     loc = get_factory_location(user_text)
 
-    # الرد الكامل (دائماً)
     res = f"𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮\n\n"
     res += f"𝐒𝐞𝐫𝐢𝐚𝐥 📦:\n{user_text}\n"
     res += f"𝐅𝐢𝐫𝐦𝐰𝐚𝐫𝐞 🔢:\n{f_ver}\n"
@@ -180,10 +179,9 @@ def process_serial_check(user_text):
         res += "𝐄𝐱𝐩𝐥𝐨𝐢𝐭 𝐀𝐯𝐚𝐢𝐥𝐚𝐛𝐢𝐥𝐢𝐭𝐲 🔓:\n╭─────────────╮\n"
         res += f"│ 🌐 Webkit : {ex['Webkit']}\n│ 💿 BD-JB  : {ex['BD-JB']}\n│ 🎮 mast1c : {ex['mast1c0re']}\n│ 🐍 Lua : {ex['Lua']}\n│ ☕ Y2JB   : {ex['Y2JB']}\n│ 📺 Netflix: {ex['Netflix']}\n╰─────────────╯\n\n"
     
-    res += "By:<a href='https://x.com/vaz3m?s=21'>@vAz3m</a>\nThank You <a href='https://x.com/qtr_703?s=21'>@qtr_703</a>"
+    res += "Thank You <a href='https://x.com/qtr_703?s=21'>@qtr_703</a>"
     return res
 
-# 👇👇 دالة الحذف التلقائي 👇👇
 async def delete_msg_job(context: ContextTypes.DEFAULT_TYPE):
     job = context.job
     try:
@@ -203,7 +201,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         result_text = process_serial_check(serial_to_check)
         if result_text:
             sent_msg = await update.message.reply_text(result_text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
-            # ⏳ جدولة الحذف بعد 30 دقيقة (1800 ثانية) إذا كان في مجموعة
             if is_group:
                 context.job_queue.run_once(delete_msg_job, 1800, chat_id=sent_msg.chat_id, data=sent_msg.message_id)
             return
@@ -212,7 +209,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                  await update.message.reply_text("⚠️ Serial not found")
              return
 
-    # رسالة الترحيب الأصلية
     welcome_msg = (
         "𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮\n\n"
         "📥 <b>Send the Serial Number found on the bottom of the box.</b>\n"
@@ -221,12 +217,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "<code>S01-X44A</code> | <code>S01-E44A</code>\n"
         "<code>S01-F148</code> (Pro) | <code>S01-M44A</code>\n"
         "<code>S01-G44A</code> (Fat)\n\n"
-        "By:<a href='https://x.com/vaz3m?s=21'>@vAz3m</a>\n"
         "Thank You <a href='https://x.com/qtr_703?s=21'>@qtr_703</a>"
     )
     sent_msg = await update.message.reply_text(welcome_msg, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
     
-    # ⏳ جدولة الحذف بعد 30 دقيقة (1800 ثانية) إذا كان في مجموعة
     if is_group:
         context.job_queue.run_once(delete_msg_job, 1800, chat_id=sent_msg.chat_id, data=sent_msg.message_id)
 
@@ -247,7 +241,6 @@ async def analyze_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             result_text = process_serial_check(clean_text)
             if result_text:
                 sent_msg = await update.message.reply_text(result_text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
-                # ⏳ جدولة الحذف بعد 30 دقيقة (1800 ثانية)
                 context.job_queue.run_once(delete_msg_job, 1800, chat_id=sent_msg.chat_id, data=sent_msg.message_id)
             return
 
@@ -263,11 +256,9 @@ async def analyze_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "Thank You <a href='https://x.com/qtr_703?s=21'>@qtr_703</a>"
             )
             sent_msg = await update.message.reply_text(welcome_msg, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
-            # ⏳ جدولة الحذف بعد 30 دقيقة (1800 ثانية)
             context.job_queue.run_once(delete_msg_job, 1800, chat_id=sent_msg.chat_id, data=sent_msg.message_id)
             return
     else:
-        # خاص
         user_text = raw_text
         result_text = process_serial_check(user_text)
         
