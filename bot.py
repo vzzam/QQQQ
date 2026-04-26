@@ -1,5 +1,6 @@
 import logging
 import re
+import asyncio
 from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
@@ -16,7 +17,7 @@ logging.basicConfig(
 )
 
 # ==========================================
-# 📂 قاعدة البيانات المحدثة والشاملة (Wiki Update)
+# 📂 قاعدة البيانات
 # ==========================================
 PS5_DB = {
     # CFI-10/11 (Fat)
@@ -139,7 +140,7 @@ def analyze_serial(raw_text):
     ex_text = "\n".join([f"│ {k} : {v}" for k, v in supported_ex.items()])
 
     return (
-        f"<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
+        f"<b>𝐏𝐒𝟓𝐀𝐉 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
         f"𝐒𝐞𝐫𝐢𝐚𝐥 📦:\n<code>{serial}</code>\n"
         f"𝐅𝐢𝐫𝐦𝐰𝐚𝐫𝐞 🔢:\n{found_v} {'✅' if min_v <= 11.00 else '❌'}\n"
         f"𝐌𝐨𝐝𝐞𝐥 🎮 :\n{model}\n"
@@ -153,6 +154,16 @@ def analyze_serial(raw_text):
         f"<b>BY: AZZAM</b>\n\n"
         f"Thank You <a href='https://x.com/qtr_703?s=21'>@qtr_703</a>"
     )
+
+# ==========================================
+# ⏰ وظيفة الحذف التلقائي
+# ==========================================
+async def delete_message_job(context: ContextTypes.DEFAULT_TYPE):
+    job = context.job
+    try:
+        await context.bot.delete_message(chat_id=job.chat_id, message_id=job.data)
+    except Exception as e:
+        logging.warning(f"Could not delete message: {e}")
 
 # ==========================================
 # 🚀 أوامر البوت
@@ -173,11 +184,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     response = analyze_serial(update.message.text)
     
+    # تحديد النص المراد إرساله
     if response:
-        await update.message.reply_text(response, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+        text_to_send = response
     else:
-        # رسالة الخطأ المحسنة والمنظمة
-        error_msg = (
+        text_to_send = (
             "<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
             "❌ <b>الرقم التسلسلي غير صحيح</b>\n"
             "يرجى التأكد من كتابة الرقم الموجود أسفل كرتون الجهاز بشكل صحيح.\n\n"
@@ -187,11 +198,29 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "<b>BY: AZZAM</b>\n"
             "Thank You @qtr_703"
         )
-        await update.message.reply_text(error_msg, parse_mode=ParseMode.HTML)
+
+    # إرسال الرسالة
+    sent_msg = await update.message.reply_text(
+        text_to_send, 
+        parse_mode=ParseMode.HTML, 
+        disable_web_page_preview=True
+    )
+
+    # إذا كانت الرسالة في "قروب" أو "سوبر قروب"، جدول الحذف بعد ساعة (3600 ثانية)
+    if update.effective_chat.type in ["group", "supergroup"]:
+        context.job_queue.run_once(
+            delete_message_job, 
+            when=3600, 
+            data=sent_msg.message_id, 
+            chat_id=update.effective_chat.id
+        )
 
 if __name__ == '__main__':
     keep_alive()
+    # بناء التطبيق مع تفعيل JobQueue
     app = ApplicationBuilder().token(TOKEN).build()
+    
     app.add_handler(CommandHandler('start', start))
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
+    
     app.run_polling()
