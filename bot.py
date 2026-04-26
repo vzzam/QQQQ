@@ -21,7 +21,7 @@ X_URL = "https://x.com/qtr_703?s=21"
 CREDIT = f'<a href="{X_URL}">@qtr_703</a>'
 
 # ==========================================
-# 📂 قاعدة البيانات
+# 📂 قاعدة البيانات المرجعية
 # ==========================================
 PS5_DB = {
     "S01-1355": "1.02", "S01-0272": "2.00", "S01-0376": "2.30", "S01-1517": "3.20",
@@ -81,72 +81,74 @@ def get_exploits(v):
     return "\n".join([f"│ {k} : {val}" for k, val in exploits.items() if val != "❌"])
 
 def analyze(text):
-    text = text.upper().strip()
-    match = re.search(r'(S0[A-Z0-9-]{3,12})', text)
+    text = text.upper().replace(" ", "").strip()
+    # استخراج أول 8 رموز (S01-XXXX) للتعامل معها كمرجع
+    match = re.search(r'(S0[A-Z0-9-]{5,6})', text)
     if not match: return None
     
-    ser = match.group(1)
-    key, origin = ser, "Unknown"
+    full_ser = match.group(1)
     
-    if ser.startswith("S01-"):
-        char = ser[4] if len(ser) > 4 else ""
-        origins = {'F': "China 🇨🇳", 'E': "China 🇨🇳", 'K': "Japan 🇯🇵", 'M': "Malaysia 🇲🇾", 'G': "Global 🌐"}
-        origin = origins.get(char, "Unknown")
-        if char.isalpha(): 
-            key = f"S01-X{ser[5:]}"
+    # 1. تحديد الدولة (Made in) بناءً على الحرف الرابع
+    origin = "Unknown"
+    char = full_ser[4] if len(full_ser) > 4 else ""
+    origins = {'F': "China 🇨🇳", 'E': "China 🇨🇳", 'K': "Japan 🇯🇵", 'M': "Malaysia 🇲🇾", 'G': "Global 🌐"}
+    origin = origins.get(char, "Unknown")
 
-    found = None
+    # 2. تحويل السيريال لمفتاح مرجعي (استبدال حرف الدولة بـ X)
+    ref_key = full_ser
+    if char.isalpha():
+        ref_key = full_ser[:4] + "X" + full_ser[5:]
+
+    # 3. البحث في قاعدة البيانات عن الفيرموير
+    found_fw = None
     for k in sorted(PS5_DB.keys(), key=len, reverse=True):
-        if key.startswith(k) or ser.startswith(k):
-            found = PS5_DB[k]
+        if ref_key.startswith(k) or full_ser.startswith(k):
+            found_fw = PS5_DB[k]
             break
     
-    if not found: return "ERR"
+    if not found_fw: return "ERR"
 
     try:
-        min_v = float(re.findall(r'(\d+\.\d+)', str(found).split('/')[0])[0])
-    except: 
-        min_v = 99.99
+        min_v = float(re.findall(r'(\d+\.\d+)', str(found_fw).split('/')[0])[0])
+    except: min_v = 99.99
 
+    # 4. تحديد الموديل بناءً على الرموز المرجعية
     model = "Fat"
-    if "X4" in key or "X3" in key: model = "Slim (CFI-20)"
-    elif "X5" in key: model = "Slim (CFI-21)"
-    elif "X1" in key: model = "Pro (CFI-70)"
-    elif "X2" in key and len(key) > 5 and key[5] == '5': model = "Pro (CFI-71)"
+    if "X4" in ref_key or "X3" in ref_key: model = "Slim (CFI-20)"
+    elif "X5" in ref_key: model = "Slim (CFI-21)"
+    elif "X1" in ref_key: model = "Pro (CFI-70)"
+    elif "X2" in ref_key:
+        model = "Pro (CFI-71)" if "X25" in ref_key else "Fat/Pro"
 
-    # --- مراجعة منطق التاريخ ---
-    # الأخير هو الشهر، ما قبل الأخير هو السنة
+    # 5. تحديد تاريخ الإنتاج (القبل الأخير سنة، الأخير شهر)
     m_map = {'1':'January','2':'February','3':'March','4':'April','5':'May','6':'June','7':'July','8':'August','9':'September','A':'October','B':'November','C':'December'}
     
-    # استخراج السنة من الخانة قبل الأخيرة في الكود
-    year_char = key[-2] if len(key) >= 2 else ""
-    year = f"202{year_char}" if year_char.isdigit() else "Unknown"
+    year_char = full_ser[-2] if len(full_ser) >= 2 else ""
+    production_year = f"202{year_char}" if year_char.isdigit() else "Unknown"
     
-    # استخراج الشهر من آخر خانة
-    month_char = key[-1] if len(key) >= 1 else ""
-    month = m_map.get(month_char, "Unknown")
+    month_char = full_ser[-1] if len(full_ser) >= 1 else ""
+    production_month = m_map.get(month_char, "Unknown")
 
     return (
         f"<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
-        f"𝐒𝐞𝐫𝐢𝐚𝐥 📦:\n<code>{ser}</code>\n"
-        f"𝐅𝐢𝐫𝐦𝐰𝐚𝐫𝐞 🔢:\n{found} {'✅' if min_v <= 11.00 else '❌'}\n"
+        f"𝐒𝐞𝐫𝐢𝐚𝐥 📦:\n<code>{full_ser}</code>\n"
+        f"𝐅𝐢𝐫𝐦𝐰𝐚𝐫𝐞 🔢:\n{found_fw} {'✅' if min_v <= 11.00 else '❌'}\n"
         f"𝐌𝐨𝐝𝐞𝐥 🎮 :\n{model}\n"
         f"𝐌𝐚𝐝𝐞 𝐢𝐧 🏳️ :\n{origin}\n"
-        f"𝐃𝐚𝐭𝐞 𝐨𝐟 𝐩𝐫𝐨𝐝𝐮𝐜𝐭𝐢𝐨𝐧 📅 :\n{month} {year}\n"
+        f"𝐃𝐚𝐭𝐞 𝐨𝐟 𝐩𝐫𝐨𝐝𝐮𝐜𝐭𝐢𝐨𝐧 📅 :\n{production_month} {production_year}\n"
         f"𝐒𝐭𝐚𝐭𝐮𝐬 📊:\n{'SUPPORT ✅' if min_v <= 11.00 else 'UNSUPPORTED ❌'}\n\n"
         f"𝐄𝐱𝐩𝐥𝐨𝐢𝐭 𝐀𝐯𝐚𝐢𝐥𝐚𝐛𝐢𝐥𝐢𝐭𝐲 🔓:\n╭─────────────╮\n{get_exploits(min_v)}\n╰─────────────╯\n\n"
         f"BY: AZZAM\n\nThank You {CREDIT}"
     )
 
+# ==========================================
+# 🚀 المعالجات (Handlers)
+# ==========================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = (
         "<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
-        "📥 Send the Serial Number found on the bottom of the box.\n"
+        "📥 Send the Serial Number (e.g., S01-F447).\n"
         "ارسل السيريال نمبر الموجود أسفل كرتون الجهاز.\n\n"
-        "📝 Examples / أمثلة:\n"
-        "<code>S01-X44A | S01-E44A</code>\n"
-        "<code>S01-F148 (Pro) | S01-M44A</code>\n"
-        "<code>S01-G44A (Fat)</code>\n\n"
         f"Thank You {CREDIT}"
     )
     await update.message.reply_text(msg, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
@@ -154,16 +156,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text: return
     raw = update.message.text.upper().strip()
+    
+    # تجاهل أي رسالة لا تبدأ بـ S0
     if not raw.startswith("S0"): return
 
     res = analyze(raw)
     if res == "ERR":
         text = (
             "<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
-            "❌ الرقم التسلسلي غير صحيح\n"
-            "يرجى التأكد من كتابة الرقم الموجود أسفل كرتون الجهاز بشكل صحيح.\n\n"
-            "❌ Serial number incorrect\n"
-            "Please ensure you enter the number from the bottom of the box correctly.\n\n"
+            "❌ الرقم التسلسلي غير موجود في المرجع حالياً\n"
             "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
             "BY: AZZAM\n"
             f"Thank You {CREDIT}"
@@ -173,6 +174,8 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else: return
 
     sent = await update.message.reply_text(text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+    
+    # حذف تلقائي في المجموعات بعد ساعة
     if update.effective_chat.type in ["group", "supergroup"]:
         context.job_queue.run_once(lambda c: c.bot.delete_message(sent.chat_id, sent.message_id), 3600)
 
