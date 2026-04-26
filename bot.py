@@ -182,12 +182,23 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(welcome, parse_mode=ParseMode.HTML)
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    raw_text = update.message.text.upper().strip()
+    
+    # 🕵️ التحقق مما إذا كان النص يحتوي على نمط سيريال نمبر (S01- أو F10 أو AK وغيرها)
+    # هذا الشرط يمنع البوت من التفاعل مع الكلام العادي في المجموعات
+    serial_pattern = r'(S01|F\d{3}|AJ\d{3}|AK\d{3}|[A-Z]\d{2,3})'
+    is_potentially_serial = re.search(serial_pattern, raw_text)
+    
+    # إذا كنا في مجموعة والنص لا يشبه السيريال، نتجاهل الرسالة تماماً
+    if update.effective_chat.type in ["group", "supergroup"] and not is_potentially_serial:
+        return
+
     response = analyze_serial(update.message.text)
     
-    # تحديد النص المراد إرساله
     if response:
         text_to_send = response
     else:
+        # إذا كان النص يشبه السيريال لكنه غير موجود في القاعدة
         text_to_send = (
             "<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
             "❌ <b>الرقم التسلسلي غير صحيح</b>\n"
@@ -199,14 +210,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Thank You @qtr_703"
         )
 
-    # إرسال الرسالة
+    # إرسال الرد
     sent_msg = await update.message.reply_text(
         text_to_send, 
         parse_mode=ParseMode.HTML, 
         disable_web_page_preview=True
     )
 
-    # إذا كانت الرسالة في "قروب" أو "سوبر قروب"، جدول الحذف بعد ساعة (3600 ثانية)
+    # جدولة الحذف التلقائي بعد ساعة في المجموعات
     if update.effective_chat.type in ["group", "supergroup"]:
         context.job_queue.run_once(
             delete_message_job, 
@@ -217,7 +228,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 if __name__ == '__main__':
     keep_alive()
-    # بناء التطبيق مع تفعيل JobQueue
     app = ApplicationBuilder().token(TOKEN).build()
     
     app.add_handler(CommandHandler('start', start))
