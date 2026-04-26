@@ -63,6 +63,10 @@ PS5_DB = {
     "S01-X25C": "12.02/12.20"
 }
 
+# الرابط الجديد الموجه لتويتر (X)
+X_URL = "https://x.com/qtr_703?s=21"
+CREDIT = f'<a href="{X_URL}">@qtr_703</a>'
+
 # ==========================================
 # 🛠️ الدوال المساعدة
 # ==========================================
@@ -121,7 +125,7 @@ def analyze(text):
         f"𝐃𝐚𝐭𝐞 𝐨𝐟 𝐩𝐫𝐨𝐝𝐮𝐜𝐭𝐢𝐨𝐧 📅 :\n{month} {year}\n"
         f"𝐒𝐭𝐚𝐭𝐮𝐬 📊:\n{'SUPPORT ✅' if min_v <= 11.00 else 'UNSUPPORTED ❌'}\n\n"
         f"𝐄𝐱𝐩𝐥𝐨𝐢𝐭 𝐀𝐯𝐚𝐢𝐥𝐚𝐛𝐢𝐥𝐢𝐭𝐲 🔓:\n╭─────────────╮\n{get_exploits(min_v)}\n╰─────────────╯\n\n"
-        f"BY: AZZAM\n\nThank You @qtr_703"
+        f"BY: AZZAM\n\nThank You {CREDIT}"
     )
 
 # ==========================================
@@ -129,38 +133,35 @@ def analyze(text):
 # ==========================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = (
-        "<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
-        "📥 Send the Serial Number found on the bottom of the box.\n"
-        "ارسل السيريال نمبر الموجود أسفل كرتون الجهاز.\n\n"
-        "📝 Examples / أمثلة:\n"
-        "<code>S01-X44A | S01-E44A</code>\n"
-        "<code>S01-F148 (Pro) | S01-M44A</code>\n"
-        "<code>S01-G44A (Fat)</code>\n\n"
-        "Thank You @qtr_703"
+        f"<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
+        f"📥 Send the Serial Number found on the bottom of the box.\n"
+        f"ارسل السيريال نمبر الموجود أسفل كرتون الجهاز.\n\n"
+        f"📝 Examples / أمثلة:\n"
+        f"<code>S01-X44A | S01-E44A</code>\n"
+        f"<code>S01-F148 (Pro) | S01-M44A</code>\n"
+        f"<code>S01-G44A (Fat)</code>\n\n"
+        f"Thank You {CREDIT}"
     )
-    await update.message.reply_text(msg, parse_mode=ParseMode.HTML)
+    await update.message.reply_text(msg, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
 
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text: return
     raw = update.message.text.upper().strip()
     
-    # 🕵️ شرط أساسي: إذا لم تبدأ الرسالة بـ S0، تجاهلها تماماً
-    if not raw.startswith("S0"):
-        return
+    if not raw.startswith("S0"): return
 
     res = analyze(update.message.text)
     
     if res == "ERR":
-        # يظهر فقط إذا بدأ بـ S0 ولكنه غير صحيح/غير موجود
         text = (
-            "<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
-            "❌ الرقم التسلسلي غير صحيح\n"
-            "يرجى التأكد من كتابة الرقم الموجود أسفل كرتون الجهاز بشكل صحيح.\n\n"
-            "❌ Serial number incorrect\n"
-            "Please ensure you enter the number from the bottom of the box correctly.\n\n"
-            "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
-            "BY: AZZAM\n"
-            "Thank You @qtr_703"
+            f"<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
+            f"❌ الرقم التسلسلي غير صحيح\n"
+            f"يرجى التأكد من كتابة الرقم الموجود أسفل كرتون الجهاز بشكل صحيح.\n\n"
+            f"❌ Serial number incorrect\n"
+            f"Please ensure you enter the number from the bottom of the box correctly.\n\n"
+            f"⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
+            f"BY: AZZAM\n"
+            f"Thank You {CREDIT}"
         )
     elif res:
         text = res
