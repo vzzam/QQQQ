@@ -95,7 +95,8 @@ def get_supported_exploits(v):
 
 def analyze_serial(raw_text):
     text = raw_text.upper().strip()
-    match = re.search(r'([A-Z0-9]{2,3}-?[A-Z0-9]{3,5})', text)
+    # استخراج السيريال الذي يبدأ بـ S01 فقط
+    match = re.search(r'(S01-?[A-Z0-9]{3,7})', text)
     if not match: return None
     
     serial = match.group(1)
@@ -147,7 +148,7 @@ def analyze_serial(raw_text):
         f"𝐌𝐚𝐝𝐞 𝐢𝐧 🏳️ :\n{origin}\n"
         f"𝐃𝐚𝐭𝐞 𝐨𝐟 𝐩𝐫𝐨𝐝𝐮𝐜𝐭𝐢𝐨𝐧 📅 :\n{month} {year}\n"
         f"𝐒𝐭𝐚𝐭𝐮𝐬 📊:\n{'SUPPORT ✅' if min_v <= 11.00 else 'UNSUPPORTED ❌'}\n\n"
-        f"𝐄𝐱𝐩𝐥𝐨𝐢𝐭 𝐀𝐯𝐚𝐢𝐥𝐚𝐛𝐢𝐥𝐢𝐭𝐲 🔓:\n"
+        f"𝐄𝐱𝐩𝐥𝐨𝐢𝐭 𝐀𝐯𝐚𝐢𝐥𝐚𝐛𝐢𝐥𝐢ty 🔓:\n"
         f"╭─────────────╮\n"
         f"{ex_text}\n"
         f"╰─────────────╯\n\n"
@@ -171,12 +172,10 @@ async def delete_message_job(context: ContextTypes.DEFAULT_TYPE):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome = (
         "<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
-        "📥 Send the Serial Number found on the bottom of the box.\n"
-        "ارسل السيريال نمبر الموجود أسفل كرتون الجهاز.\n\n"
+        "📥 Send the Serial Number starting with (S01) found on the bottom of the box.\n"
+        "ارسل السيريال نمبر الذي يبدأ بـ (S01) والموجود أسفل كرتون الجهاز.\n\n"
         "📝 Examples / أمثلة:\n"
-        "<code>S01-X44A</code> | <code>S01-E44A</code>\n"
-        "<code>S01-F148 (Pro)</code> | <code>S01-M44A</code>\n"
-        "<code>S01-G44A (Fat)</code>\n\n"
+        "<code>S01-X44A</code> | <code>S01-E44A</code>\n\n"
         "Thank You @qtr_703"
     )
     await update.message.reply_text(welcome, parse_mode=ParseMode.HTML)
@@ -184,33 +183,28 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     raw_text = update.message.text.upper().strip()
     
-    # 🕵️ التحقق مما إذا كان النص يحتوي على نمط سيريال نمبر (S01- أو F10 أو AK وغيرها)
-    # هذا الشرط يمنع البوت من التفاعل مع الكلام العادي في المجموعات
-    serial_pattern = r'(S01|F\d{3}|AJ\d{3}|AK\d{3}|[A-Z]\d{2,3})'
-    is_potentially_serial = re.search(serial_pattern, raw_text)
-    
-    # إذا كنا في مجموعة والنص لا يشبه السيريال، نتجاهل الرسالة تماماً
-    if update.effective_chat.type in ["group", "supergroup"] and not is_potentially_serial:
-        return
+    # 🕵️ فلتر صارم: التجاهل التام إذا لم تبدأ الرسالة بـ S01 في المجموعات
+    if update.effective_chat.type in ["group", "supergroup"]:
+        if not raw_text.startswith("S01"):
+            return
 
     response = analyze_serial(update.message.text)
     
     if response:
         text_to_send = response
     else:
-        # إذا كان النص يشبه السيريال لكنه غير موجود في القاعدة
+        # إذا بدأت بـ S01 ولكنها غير صحيحة أو غير مدعومة
         text_to_send = (
             "<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
             "❌ <b>الرقم التسلسلي غير صحيح</b>\n"
-            "يرجى التأكد من كتابة الرقم الموجود أسفل كرتون الجهاز بشكل صحيح.\n\n"
+            "يرجى التأكد من كتابة الرقم الموجود أسفل كرتون الجهاز بشكل صحيح (يجب أن يبدأ بـ S01).\n\n"
             "❌ <b>Serial number incorrect</b>\n"
-            "Please ensure you enter the number from the bottom of the box correctly.\n\n"
+            "Please ensure you enter the number from the bottom of the box correctly (Must start with S01).\n\n"
             "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
             "<b>BY: AZZAM</b>\n"
             "Thank You @qtr_703"
         )
 
-    # إرسال الرد
     sent_msg = await update.message.reply_text(
         text_to_send, 
         parse_mode=ParseMode.HTML, 
