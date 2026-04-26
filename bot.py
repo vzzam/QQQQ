@@ -110,7 +110,6 @@ def analyze_serial(raw_text):
         if char.isalpha(): search_key = f"S01-X{serial[5:]}"
 
     found_v = None
-    # Sort keys by length to find the most specific match first
     for k in sorted(PS5_DB.keys(), key=len, reverse=True):
         if search_key.startswith(k) or serial.startswith(k):
             found_v = PS5_DB[k]
@@ -118,15 +117,12 @@ def analyze_serial(raw_text):
     
     if not found_v: return None
 
-    # Extraction logic for min version
     v_list = str(found_v).split('/')
     try: 
-        # Clean the version string from any extra text like "NO REC"
         clean_v = re.findall(r'(\d+\.\d+)', v_list[0])[0]
         min_v = float(clean_v)
     except: min_v = 99.99
 
-    # Model Identification
     if "X4" in search_key or "X3" in search_key: model = "Slim (CFI-20)"
     elif "X5" in search_key: model = "Slim (CFI-21)"
     elif "X1" in search_key: model = "Pro (CFI-70)"
@@ -143,8 +139,8 @@ def analyze_serial(raw_text):
     ex_text = "\n".join([f"│ {k} : {v}" for k, v in supported_ex.items()])
 
     return (
-        f"𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮\n\n"
-        f"𝐒𝐞𝐫𝐢𝐚𝐥 📦:\n{serial}\n"
+        f"<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
+        f"𝐒𝐞𝐫𝐢𝐚𝐥 📦:\n<code>{serial}</code>\n"
         f"𝐅𝐢𝐫𝐦𝐰𝐚𝐫𝐞 🔢:\n{found_v} {'✅' if min_v <= 11.00 else '❌'}\n"
         f"𝐌𝐨𝐝𝐞𝐥 🎮 :\n{model}\n"
         f"𝐌𝐚𝐝𝐞 𝐢𝐧 🏳️ :\n{origin}\n"
@@ -154,7 +150,7 @@ def analyze_serial(raw_text):
         f"╭─────────────╮\n"
         f"{ex_text}\n"
         f"╰─────────────╯\n\n"
-        f"BY: AZZAM\n\n"
+        f"<b>BY: AZZAM</b>\n\n"
         f"Thank You <a href='https://x.com/qtr_703?s=21'>@qtr_703</a>"
     )
 
@@ -163,21 +159,35 @@ def analyze_serial(raw_text):
 # ==========================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome = (
-        "𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮\n\n"
+        "<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
         "📥 Send the Serial Number found on the bottom of the box.\n"
         "ارسل السيريال نمبر الموجود أسفل كرتون الجهاز.\n\n"
         "📝 Examples / أمثلة:\n"
-        "S01-X44A | S01-E44A\n"
-        "S01-F148 (Pro) | S01-M44A\n"
-        "S01-G44A (Fat)\n\n"
+        "<code>S01-X44A</code> | <code>S01-E44A</code>\n"
+        "<code>S01-F148 (Pro)</code> | <code>S01-M44A</code>\n"
+        "<code>S01-G44A (Fat)</code>\n\n"
         "Thank You @qtr_703"
     )
     await update.message.reply_text(welcome, parse_mode=ParseMode.HTML)
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     response = analyze_serial(update.message.text)
+    
     if response:
         await update.message.reply_text(response, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+    else:
+        # رسالة الخطأ المحسنة والمنظمة
+        error_msg = (
+            "<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
+            "❌ <b>الرقم التسلسلي غير صحيح</b>\n"
+            "يرجى التأكد من كتابة الرقم الموجود أسفل كرتون الجهاز بشكل صحيح.\n\n"
+            "❌ <b>Serial number incorrect</b>\n"
+            "Please ensure you enter the number from the bottom of the box correctly.\n\n"
+            "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
+            "<b>BY: AZZAM</b>\n"
+            "Thank You @qtr_703"
+        )
+        await update.message.reply_text(error_msg, parse_mode=ParseMode.HTML)
 
 if __name__ == '__main__':
     keep_alive()
