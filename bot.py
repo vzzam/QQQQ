@@ -10,12 +10,17 @@ from keep_alive import keep_alive
 # ==========================================
 # 🔴 الإعدادات الأساسية
 # ==========================================
+# ملاحظة: يفضل دائماً وضع التوكن في Environment Variables
 TOKEN = "7976756950:AAGs4odFu9fABU0nYNUnuCUJyB4QIdINgS4"
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
+
+# الرابط الخاص بـ @qtr_703
+X_URL = "https://x.com/qtr_703?s=21"
+CREDIT = f'<a href="{X_URL}">@qtr_703</a>'
 
 # ==========================================
 # 📂 قاعدة البيانات (محفوظة بالكامل)
@@ -63,10 +68,6 @@ PS5_DB = {
     "S01-X25C": "12.02/12.20"
 }
 
-# الرابط الجديد الموجه لتويتر (X)
-X_URL = "https://x.com/qtr_703?s=21"
-CREDIT = f'<a href="{X_URL}">@qtr_703</a>'
-
 # ==========================================
 # 🛠️ الدوال المساعدة
 # ==========================================
@@ -79,7 +80,8 @@ def get_exploits(v):
         "☕ Y2JB": "✅" if v <= 13.20 else "❌",
         "📺 Netflix": "✅" if v <= 12.40 else "❌"
     }
-    return "\n".join([f"│ {k} : {v}" for k, val in exploits.items() if val != "❌"])
+    # نقوم فقط بعرض الأدوات المدعومة حالياً أو المتاحة كـ Private
+    return "\n".join([f"│ {k} : {val}" for k, val in exploits.items() if val != "❌"])
 
 def analyze(text):
     text = text.upper().strip()
@@ -91,11 +93,15 @@ def analyze(text):
     
     if ser.startswith("S01-"):
         char = ser[4] if len(ser) > 4 else ""
+        # تصنيف الدول المصنعة بناءً على الحرف الرابع
         origins = {'F': "China 🇨🇳", 'E': "China 🇨🇳", 'K': "Japan 🇯🇵", 'M': "Malaysia 🇲🇾", 'G': "Global 🌐"}
         origin = origins.get(char, "Unknown")
-        if char.isalpha(): key = f"S01-X{ser[5:]}"
+        # تحويل الحروف إلى مفتاح بحث عام (X) لمطابقة قاعدة البيانات
+        if char.isalpha(): 
+            key = f"S01-X{ser[5:]}"
 
     found = None
+    # البحث عن السيريال في قاعدة البيانات (الأكثر تحديداً أولاً)
     for k in sorted(PS5_DB.keys(), key=len, reverse=True):
         if key.startswith(k) or ser.startswith(k):
             found = PS5_DB[k]
@@ -103,18 +109,23 @@ def analyze(text):
     
     if not found: return "ERR"
 
+    # استخراج أقل إصدار متوقع للحساب
     try:
         min_v = float(re.findall(r'(\d+\.\d+)', str(found).split('/')[0])[0])
-    except: min_v = 99.99
+    except: 
+        min_v = 99.99
 
+    # تحديد موديل الجهاز
     model = "Fat"
     if "X4" in key or "X3" in key: model = "Slim (CFI-20)"
     elif "X5" in key: model = "Slim (CFI-21)"
     elif "X1" in key: model = "Pro (CFI-70)"
     elif "X2" in key and len(key) > 5 and key[5] == '5': model = "Pro (CFI-71)"
 
+    # تحديد شهر وسنة الإنتاج
     m_map = {'1':'January','2':'February','3':'March','4':'April','5':'May','6':'June','7':'July','8':'August','9':'September','A':'October','B':'November','C':'December'}
-    month, year = m_map.get(key[-1], "Unknown"), f"202{key[-2]}" if len(key) >= 2 else "Unknown"
+    month = m_map.get(key[-1], "Unknown") if len(key) > 0 else "Unknown"
+    year = f"202{key[-2]}" if len(key) >= 2 and key[-2].isdigit() else "Unknown"
 
     return (
         f"<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
@@ -124,7 +135,7 @@ def analyze(text):
         f"𝐌𝐚𝐝𝐞 𝐢𝐧 🏳️ :\n{origin}\n"
         f"𝐃𝐚𝐭𝐞 𝐨𝐟 𝐩𝐫𝐨𝐝𝐮𝐜𝐭𝐢𝐨𝐧 📅 :\n{month} {year}\n"
         f"𝐒𝐭𝐚𝐭𝐮𝐬 📊:\n{'SUPPORT ✅' if min_v <= 11.00 else 'UNSUPPORTED ❌'}\n\n"
-        f"𝐄𝐱𝐩𝐥𝐨𝐢𝐭 𝐀𝐯𝐚𝐢𝐥𝐚𝐛𝐢𝐥𝐢𝐭𝐲 🔓:\n╭─────────────╮\n{get_exploits(min_v)}\n╰─────────────╯\n\n"
+        f"𝐄𝐱𝐩𝐥𝐨𝐢𝐭 𝐀𝐯𝐚𝐢𝐥𝐚𝐛𝐢𝐥𝐢ty 🔓:\n╭─────────────╮\n{get_exploits(min_v)}\n╰─────────────╯\n\n"
         f"BY: AZZAM\n\nThank You {CREDIT}"
     )
 
@@ -133,48 +144,61 @@ def analyze(text):
 # ==========================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = (
-        f"<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
-        f"📥 Send the Serial Number found on the bottom of the box.\n"
-        f"ارسل السيريال نمبر الموجود أسفل كرتون الجهاز.\n\n"
-        f"📝 Examples / أمثلة:\n"
-        f"<code>S01-X44A | S01-E44A</code>\n"
-        f"<code>S01-F148 (Pro) | S01-M44A</code>\n"
-        f"<code>S01-G44A (Fat)</code>\n\n"
+        "<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
+        "📥 Send the Serial Number found on the bottom of the box.\n"
+        "ارسل السيريال نمبر الموجود أسفل كرتون الجهاز.\n\n"
+        "📝 Examples / أمثلة:\n"
+        "<code>S01-X44A | S01-E44A</code>\n"
+        "<code>S01-F148 (Pro) | S01-M44A</code>\n"
+        "<code>S01-G44A (Fat)</code>\n\n"
         f"Thank You {CREDIT}"
     )
     await update.message.reply_text(msg, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
 
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text: return
-    raw = update.message.text.upper().strip()
     
-    if not raw.startswith("S0"): return
+    text_input = update.message.text.upper().strip()
+    
+    # 🕵️ التجاهل التام لأي رسالة لا تبدأ بـ S0
+    if not text_input.startswith("S0"):
+        return
 
-    res = analyze(update.message.text)
+    res = analyze(text_input)
     
     if res == "ERR":
-        text = (
-            f"<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
-            f"❌ الرقم التسلسلي غير صحيح\n"
-            f"يرجى التأكد من كتابة الرقم الموجود أسفل كرتون الجهاز بشكل صحيح.\n\n"
-            f"❌ Serial number incorrect\n"
-            f"Please ensure you enter the number from the bottom of the box correctly.\n\n"
-            f"⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
-            f"BY: AZZAM\n"
+        # رسالة الخطأ الرسمية للسيريال غير الصحيح
+        text_out = (
+            "<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
+            "❌ الرقم التسلسلي غير صحيح\n"
+            "يرجى التأكد من كتابة الرقم الموجود أسفل كرتون الجهاز بشكل صحيح.\n\n"
+            "❌ Serial number incorrect\n"
+            "Please ensure you enter the number from the bottom of the box correctly.\n\n"
+            "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
+            "BY: AZZAM\n"
             f"Thank You {CREDIT}"
         )
     elif res:
-        text = res
-    else: return
+        text_out = res
+    else:
+        return
 
-    sent = await update.message.reply_text(text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+    sent_msg = await update.message.reply_text(
+        text_out, 
+        parse_mode=ParseMode.HTML, 
+        disable_web_page_preview=True
+    )
 
+    # حذف الرسالة بعد ساعة في المجموعات للحفاظ على النظافة
     if update.effective_chat.type in ["group", "supergroup"]:
-        context.job_queue.run_once(lambda c: c.bot.delete_message(sent.chat_id, sent.message_id), 3600)
+        context.job_queue.run_once(lambda c: c.bot.delete_message(sent_msg.chat_id, sent_msg.message_id), 3600)
 
 if __name__ == '__main__':
     keep_alive()
     app = ApplicationBuilder().token(TOKEN).build()
+    
     app.add_handler(CommandHandler('start', start))
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle))
+    
+    print("Bot is running...")
     app.run_polling()
