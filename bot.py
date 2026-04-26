@@ -10,7 +10,6 @@ from keep_alive import keep_alive
 # ==========================================
 # 🔴 الإعدادات الأساسية
 # ==========================================
-# ملاحظة: يفضل دائماً وضع التوكن في Environment Variables
 TOKEN = "7976756950:AAGs4odFu9fABU0nYNUnuCUJyB4QIdINgS4"
 
 logging.basicConfig(
@@ -18,12 +17,11 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-# الرابط الخاص بـ @qtr_703
 X_URL = "https://x.com/qtr_703?s=21"
 CREDIT = f'<a href="{X_URL}">@qtr_703</a>'
 
 # ==========================================
-# 📂 قاعدة البيانات (محفوظة بالكامل)
+# 📂 قاعدة البيانات
 # ==========================================
 PS5_DB = {
     "S01-1355": "1.02", "S01-0272": "2.00", "S01-0376": "2.30", "S01-1517": "3.20",
@@ -80,7 +78,6 @@ def get_exploits(v):
         "☕ Y2JB": "✅" if v <= 13.20 else "❌",
         "📺 Netflix": "✅" if v <= 12.40 else "❌"
     }
-    # نقوم فقط بعرض الأدوات المدعومة حالياً أو المتاحة كـ Private
     return "\n".join([f"│ {k} : {val}" for k, val in exploits.items() if val != "❌"])
 
 def analyze(text):
@@ -93,15 +90,12 @@ def analyze(text):
     
     if ser.startswith("S01-"):
         char = ser[4] if len(ser) > 4 else ""
-        # تصنيف الدول المصنعة بناءً على الحرف الرابع
         origins = {'F': "China 🇨🇳", 'E': "China 🇨🇳", 'K': "Japan 🇯🇵", 'M': "Malaysia 🇲🇾", 'G': "Global 🌐"}
         origin = origins.get(char, "Unknown")
-        # تحويل الحروف إلى مفتاح بحث عام (X) لمطابقة قاعدة البيانات
         if char.isalpha(): 
             key = f"S01-X{ser[5:]}"
 
     found = None
-    # البحث عن السيريال في قاعدة البيانات (الأكثر تحديداً أولاً)
     for k in sorted(PS5_DB.keys(), key=len, reverse=True):
         if key.startswith(k) or ser.startswith(k):
             found = PS5_DB[k]
@@ -109,23 +103,28 @@ def analyze(text):
     
     if not found: return "ERR"
 
-    # استخراج أقل إصدار متوقع للحساب
     try:
         min_v = float(re.findall(r'(\d+\.\d+)', str(found).split('/')[0])[0])
     except: 
         min_v = 99.99
 
-    # تحديد موديل الجهاز
     model = "Fat"
     if "X4" in key or "X3" in key: model = "Slim (CFI-20)"
     elif "X5" in key: model = "Slim (CFI-21)"
     elif "X1" in key: model = "Pro (CFI-70)"
     elif "X2" in key and len(key) > 5 and key[5] == '5': model = "Pro (CFI-71)"
 
-    # تحديد شهر وسنة الإنتاج
+    # --- مراجعة منطق التاريخ ---
+    # الأخير هو الشهر، ما قبل الأخير هو السنة
     m_map = {'1':'January','2':'February','3':'March','4':'April','5':'May','6':'June','7':'July','8':'August','9':'September','A':'October','B':'November','C':'December'}
-    month = m_map.get(key[-1], "Unknown") if len(key) > 0 else "Unknown"
-    year = f"202{key[-2]}" if len(key) >= 2 and key[-2].isdigit() else "Unknown"
+    
+    # استخراج السنة من الخانة قبل الأخيرة في الكود
+    year_char = key[-2] if len(key) >= 2 else ""
+    year = f"202{year_char}" if year_char.isdigit() else "Unknown"
+    
+    # استخراج الشهر من آخر خانة
+    month_char = key[-1] if len(key) >= 1 else ""
+    month = m_map.get(month_char, "Unknown")
 
     return (
         f"<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
@@ -135,13 +134,10 @@ def analyze(text):
         f"𝐌𝐚𝐝𝐞 𝐢𝐧 🏳️ :\n{origin}\n"
         f"𝐃𝐚𝐭𝐞 𝐨𝐟 𝐩𝐫𝐨𝐝𝐮𝐜𝐭𝐢𝐨𝐧 📅 :\n{month} {year}\n"
         f"𝐒𝐭𝐚𝐭𝐮𝐬 📊:\n{'SUPPORT ✅' if min_v <= 11.00 else 'UNSUPPORTED ❌'}\n\n"
-        f"𝐄𝐱𝐩𝐥𝐨𝐢𝐭 𝐀𝐯𝐚𝐢𝐥𝐚𝐛𝐢𝐥𝐢ty 🔓:\n╭─────────────╮\n{get_exploits(min_v)}\n╰─────────────╯\n\n"
+        f"𝐄𝐱𝐩𝐥𝐨𝐢𝐭 𝐀𝐯𝐚𝐢𝐥𝐚𝐛𝐢𝐥𝐢𝐭𝐲 🔓:\n╭─────────────╮\n{get_exploits(min_v)}\n╰─────────────╯\n\n"
         f"BY: AZZAM\n\nThank You {CREDIT}"
     )
 
-# ==========================================
-# 🚀 المعالجات (Handlers)
-# ==========================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = (
         "<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
@@ -157,18 +153,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text: return
-    
-    text_input = update.message.text.upper().strip()
-    
-    # 🕵️ التجاهل التام لأي رسالة لا تبدأ بـ S0
-    if not text_input.startswith("S0"):
-        return
+    raw = update.message.text.upper().strip()
+    if not raw.startswith("S0"): return
 
-    res = analyze(text_input)
-    
+    res = analyze(raw)
     if res == "ERR":
-        # رسالة الخطأ الرسمية للسيريال غير الصحيح
-        text_out = (
+        text = (
             "<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
             "❌ الرقم التسلسلي غير صحيح\n"
             "يرجى التأكد من كتابة الرقم الموجود أسفل كرتون الجهاز بشكل صحيح.\n\n"
@@ -179,26 +169,16 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"Thank You {CREDIT}"
         )
     elif res:
-        text_out = res
-    else:
-        return
+        text = res
+    else: return
 
-    sent_msg = await update.message.reply_text(
-        text_out, 
-        parse_mode=ParseMode.HTML, 
-        disable_web_page_preview=True
-    )
-
-    # حذف الرسالة بعد ساعة في المجموعات للحفاظ على النظافة
+    sent = await update.message.reply_text(text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
     if update.effective_chat.type in ["group", "supergroup"]:
-        context.job_queue.run_once(lambda c: c.bot.delete_message(sent_msg.chat_id, sent_msg.message_id), 3600)
+        context.job_queue.run_once(lambda c: c.bot.delete_message(sent.chat_id, sent.message_id), 3600)
 
 if __name__ == '__main__':
     keep_alive()
     app = ApplicationBuilder().token(TOKEN).build()
-    
     app.add_handler(CommandHandler('start', start))
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle))
-    
-    print("Bot is running...")
     app.run_polling()
