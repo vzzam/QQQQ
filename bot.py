@@ -53,7 +53,11 @@ PS5_DB = {
     "S01-X45A": "11.60/12.00",
     "S01-X556": "11.20", "S01-X557": "11.20/11.40", "S01-X558": "11.40/11.60",
     "S01-X559": "11.60", "S01-X55A": "11.60/12.00", "S01-X55B": "12.02/12.20",
-    "S01-X55C": "12.02/12.20",
+    "S01-X55C": "12.20/12.40",
+    # CFI-21 (2026)
+    "S01-X561": "12.40/12.60", "S01-X562": "12.60/12.70", "S01-X563": "12.70/13.00",
+    "S01-X564": "13.00/13.20", "S01-X565": "13.20",
+    
     "S01-X145": "9.05", "S01-X146": "9.05/9.40", "S01-X147": "9.40/9.60",
     "S01-X148": "9.60", "S01-X149": "9.60/10.01", "S01-X14A": "9.60/10.20",
     "S01-X14B": "10.01/10.20", "S01-X14C": "10.20/10.40",
@@ -63,35 +67,56 @@ PS5_DB = {
     "S01-X15A": "11.60/12.00",
     "S01-X256": "11.20", "S01-X257": "11.20/11.40", "S01-X258": "11.40/11.60",
     "S01-X259": "11.60", "S01-X25A": "11.60/12.00", "S01-X25B": "12.00/12.02",
-    "S01-X25C": "12.02/12.20"
+    "S01-X25C": "12.02/12.20",
+    # CFI-71 (2026)
+    "S01-X261": "12.40/12.60", "S01-X262": "12.60/12.70", "S01-X263": "12.70/13.00",
+    "S01-X264": "13.00/13.20", "S01-X265": "13.20"
 }
 
 # ==========================================
-# 🛠️ الدوال المساعدة
+# 🛠️ الدوال المساعدة وتحديث الثغرات (Exploits)
 # ==========================================
 def get_exploits(v):
-    exploits = {
-        "⏳ Lapse": "✅" if v <= 10.01 else "❌",
-        "💿 BD-JB": "✅" if v <= 7.61 else "🔒 (Private)" if v <= 10.01 else "❌",
-        "🎮 mast1c": "✅" if v <= 13.20 else "❌",
-        "🐍 Lua": "✅" if v <= 13.20 else "❌",
-        "☕ Y2JB": "✅" if v <= 13.20 else "❌",
-        "📺 Netflix": "✅" if v <= 12.40 else "❌"
-    }
-    return "\n".join([f"│ {k} : {val}" for k, val in exploits.items() if val != "❌"])
+    lines = []
+    if 1.00 <= v <= 1.14:
+        lines = ["🛠 Kernel : UMTX ✅", "⚙️ Features: Debug ✅ | HV ✅ | Linux: SOON", "🌐 Webkit : ✅", "💾 Storage: USB ✅"]
+    elif 2.00 <= v <= 2.70:
+        lines = ["🛠 Kernel : UMTX ✅ | Lapse ✅", "⚙️ Features: Debug ✅ | Etahen ✅ | HV ✅ | Linux: SOON", "🌐 Webkit : ✅", "🎮 mast1c : ✅", "🐍 Lua    : ✅", "🧩 Yarpe   : ✅", "💾 Storage: USB ✅"]
+    elif 3.00 <= v <= 3.20:
+        lines = ["🛠 Kernel : IPV6 ✅ | UMTX ✅", "⚙️ Features: Debug ✅ | Etahen ✅ | Kstuff ✅ | HV ✅ | Linux: ✅", "🌐 Webkit : ✅", "💿 BD-JB  : ✅", "🎮 mast1c : ✅", "🐍 Lua    : ✅", "🧩 Yarpe   : ✅", "💾 Storage: USB ✅ | Ext ✅"]
+    elif 4.00 <= v <= 4.51:
+        lines = ["🛠 Kernel : IPV6 ✅ | UMTX ✅ | Lapse ✅ | NetControl ✅", "⚙️ Features: Debug ✅ | Etahen ✅ | Kstuff ✅ | HV ✅ | Linux: ✅", "🌐 Webkit : ✅", "💿 BD-JB  : ✅", "🎮 mast1c : ✅", "🐍 Lua    : ✅", "🧩 Yarpe   : ✅", "☕ Y2JB   : ✅", "📺 Netflix: ✅", "💾 Storage: M.2 (4TB) ✅ | Ext ✅"]
+    elif 5.00 <= v <= 5.50:
+        lines = ["🛠 Kernel : UMTX ✅ | Lapse ✅ | NetControl ✅", "⚙️ Features: Debug ✅ | Etahen ✅ | Kstuff ✅ | HV ✅ | Linux: ✅", "🌐 Webkit : ✅", "💿 BD-JB  : ✅", "🎮 mast1c : ✅", "🐍 Lua    : ✅", "🧩 Yarpe   : ✅", "☕ Y2JB   : ✅", "📺 Netflix: ✅", "💾 Storage: M.2 (4TB) ✅ | Ext ✅"]
+    elif 6.00 <= v <= 7.61:
+        lines = ["🛠 Kernel : UMTX ✅ | Lapse ✅ | NetControl ✅", "⚙️ Features: Debug ✅ | Etahen ✅ | Kstuff ✅ | Linux: ✅ (6.00-6.02)", "💿 BD-JB  : ✅", "🎮 mast1c : ✅", "🐍 Lua    : ✅", "🧩 Yarpe   : ✅", "☕ Y2JB   : ✅", "📺 Netflix: ✅", "💾 Storage: M.2 (4TB) ✅ | Ext ✅"]
+    elif 8.00 <= v <= 10.01:
+        lines = ["🛠 Kernel : Lapse ✅ | NetControl ✅", "⚙️ Features: Debug ✅ | Etahen ✅ | Kstuff ✅", "🎮 mast1c : ✅", "🐍 Lua    : ✅", "🧩 Yarpe   : ✅", "☕ Y2JB   : ✅", "📺 Netflix: ✅", "💾 Storage: M.2 (8TB) ✅ | Ext ✅"]
+    elif 10.20 <= v <= 12.00:
+        lines = ["🛠 Kernel : NetControl ✅ | Kqueueex ✅", "⚙️ Features: Debug ✅ | Etahen ✅ | Kstuff ✅", "🎮 mast1c : ✅", "🐍 Lua    : ✅", "🧩 Yarpe   : ✅", "☕ Y2JB   : ✅", "📺 Netflix: ✅", "💾 Storage: M.2 (8TB) ✅ | Ext ✅"]
+    elif 12.02 <= v <= 12.40:
+        lines = ["🛠 Kernel : Kqueueex ✅", "⚙️ Features: Debug ✅ | Kstuff ✅", "🎮 mast1c : ✅", "🐍 Lua    : ✅", "🧩 Yarpe   : ✅", "☕ Y2JB   : ✅", "📺 Netflix: ✅", "💾 Storage: M.2 (8TB) ✅ | Ext ✅"]
+    elif 12.60 <= v <= 12.70:
+        lines = ["🛠 Kernel : Kqueueex ✅", "⚙️ Features: Debug ✅ | Kstuff ✅", "🎮 mast1c : ✅", "🐍 Lua    : ✅", "🧩 Yarpe   : ✅", "💾 Storage: M.2 (8TB) ✅ | Ext ✅"]
+    elif 13.00 <= v <= 13.20:
+        lines = ["🛠 Kernel : N/A", "⚙️ Features: N/A", "🎮 mast1c : ✅", "🐍 Lua    : ✅", "💾 Storage: M.2 (8TB) ✅ | Ext ✅"]
+    else:
+        lines = ["❌ No Exploits Available"]
+        
+    return "\n".join([f"│ {line}" for line in lines])
 
 def analyze(text):
     text = text.upper().replace(" ", "").strip()
     # استخراج أول 8 رموز (S01-XXXX) للتعامل معها كمرجع
     match = re.search(r'(S0[A-Z0-9-]{5,6})', text)
     if not match: return None
-    
+
     full_ser = match.group(1)
-    
+
     # 1. تحديد الدولة (Made in) بناءً على الحرف الرابع
     origin = "Unknown"
     char = full_ser[4] if len(full_ser) > 4 else ""
-    origins = {'F': "China 🇨🇳", 'E': "China 🇨🇳", 'K': "Japan 🇯🇵", 'M': "Malaysia 🇲🇾", 'G': "Global 🌐"}
+    origins = {'F': "China 🇨🇳", 'E': "China 🇨🇳", 'K': "Japan 🇯🇵", 'M': "Malaysia 🇲🇾", 'G': "Global 🌐", 'V': "Global 🌐"}
     origin = origins.get(char, "Unknown")
 
     # 2. تحويل السيريال لمفتاح مرجعي (استبدال حرف الدولة بـ X)
@@ -105,7 +130,7 @@ def analyze(text):
         if ref_key.startswith(k) or full_ser.startswith(k):
             found_fw = PS5_DB[k]
             break
-    
+
     if not found_fw: return "ERR"
 
     try:
@@ -118,25 +143,25 @@ def analyze(text):
     elif "X5" in ref_key: model = "Slim (CFI-21)"
     elif "X1" in ref_key: model = "Pro (CFI-70)"
     elif "X2" in ref_key:
-        model = "Pro (CFI-71)" if "X25" in ref_key else "Fat/Pro"
+        model = "Pro (CFI-71)" if "X25" in ref_key or "X26" in ref_key else "Fat/Pro"
 
     # 5. تحديد تاريخ الإنتاج (القبل الأخير سنة، الأخير شهر)
     m_map = {'1':'January','2':'February','3':'March','4':'April','5':'May','6':'June','7':'July','8':'August','9':'September','A':'October','B':'November','C':'December'}
-    
+
     year_char = full_ser[-2] if len(full_ser) >= 2 else ""
     production_year = f"202{year_char}" if year_char.isdigit() else "Unknown"
-    
+
     month_char = full_ser[-1] if len(full_ser) >= 1 else ""
     production_month = m_map.get(month_char, "Unknown")
 
     return (
         f"<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
         f"𝐒𝐞𝐫𝐢𝐚𝐥 📦:\n<code>{full_ser}</code>\n"
-        f"𝐅𝐢𝐫𝐦𝐰𝐚𝐫𝐞 🔢:\n{found_fw} {'✅' if min_v <= 11.00 else '❌'}\n"
+        f"𝐅𝐢𝐫𝐦𝐰𝐚𝐫𝐞 🔢:\n{found_fw} {'✅' if min_v <= 12.70 else '❌'}\n"
         f"𝐌𝐨𝐝𝐞𝐥 🎮 :\n{model}\n"
         f"𝐌𝐚𝐝𝐞 𝐢𝐧 🏳️ :\n{origin}\n"
         f"𝐃𝐚𝐭𝐞 𝐨𝐟 𝐩𝐫𝐨𝐝𝐮𝐜𝐭𝐢𝐨𝐧 📅 :\n{production_month} {production_year}\n"
-        f"𝐒𝐭𝐚𝐭𝐮𝐬 📊:\n{'SUPPORT ✅' if min_v <= 11.00 else 'UNSUPPORTED ❌'}\n\n"
+        f"𝐒𝐭𝐚𝐭𝐮𝐬 📊:\n{'SUPPORT ✅' if min_v <= 12.70 else 'UNSUPPORTED ❌'}\n\n"
         f"𝐄𝐱𝐩𝐥𝐨𝐢𝐭 𝐀𝐯𝐚𝐢𝐥𝐚𝐛𝐢𝐥𝐢𝐭𝐲 🔓:\n╭─────────────╮\n{get_exploits(min_v)}\n╰─────────────╯\n\n"
         f"BY: AZZAM\n\nThank You {CREDIT}"
     )
@@ -156,7 +181,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text: return
     raw = update.message.text.upper().strip()
-    
+
     # تجاهل أي رسالة لا تبدأ بـ S0
     if not raw.startswith("S0"): return
 
@@ -174,7 +199,7 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else: return
 
     sent = await update.message.reply_text(text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
-    
+
     # حذف تلقائي في المجموعات بعد ساعة
     if update.effective_chat.type in ["group", "supergroup"]:
         context.job_queue.run_once(lambda c: c.bot.delete_message(sent.chat_id, sent.message_id), 3600)
