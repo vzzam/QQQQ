@@ -4,15 +4,14 @@ import asyncio
 import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
-from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters, CallbackQueryHandler
+from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 from keep_alive import keep_alive
 
 # ==========================================
 # 🔴 الإعدادات الأساسية
 # ==========================================
 TOKEN = "7976756950:AAGs4odFu9fABU0nYNUnuCUJyB4QIdINgS4"
-# تم التأكد من المحفظة وتثبيتها أدناه ✅
-SUPPORT_WALLET = "0x9BCEA3b53E276A2340D65a04620Cbf9d901B6617"
+KOFI_URL = "https://ko-fi.com/vzzam" 
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -119,7 +118,7 @@ def analyze(text):
     production_month = m_map.get(full_ser[-1], "Unknown")
 
     return (
-        f"<b> Councilor 𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
+        f"<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
         f"𝐒𝐞𝐫𝐢𝐚𝐥 📦:\n<code>{full_ser}</code>\n"
         f"𝐅𝐢𝐫𝐦𝐰𝐚𝐫𝐞 🔢:\n{found_fw} {'✅' if min_v <= 12.70 else '❌'}\n"
         f"𝐌𝐨𝐝𝐞𝐥 🎮 :\n{model}\n"
@@ -134,22 +133,11 @@ def analyze(text):
 # 🚀 المعالجات (Handlers)
 # ==========================================
 def get_support_kb():
-    return InlineKeyboardMarkup([[InlineKeyboardButton("💎 Donate", callback_data="show_wallet")]])
-
-async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    # إظهار تنبيه منبثق للمستخدم
-    await query.answer("Wallet Address Copied to Message Below!", show_alert=False)
-    
-    # إرسال رسالة نصية تحتوي على عنوان المحفظة لنسخه
-    await query.message.reply_text(
-        f"<b>💎 Support Wallet / مفتاح الدعم:</b>\n\n<code>{SUPPORT_WALLET}</code>\n\n<i>Click the address above to copy! | اضغط على العنوان للنسخ!</i>",
-        parse_mode=ParseMode.HTML
-    )
+    return InlineKeyboardMarkup([[InlineKeyboardButton("💎 Donate", url=KOFI_URL)]])
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = (
-        "<b> Councilor 𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
+        "<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
         "📥 Send the Serial Number (e.g., S01-F447).\n"
         "ارسل السيريال نمبر الموجود أسفل كرتون الجهاز.\n\n"
         f"Thank You {CREDIT}"
@@ -164,7 +152,7 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     res = analyze(raw)
     if res == "ERR":
         text = (
-            "<b> Councilor 𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
+            "<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
             "❌ الرقم التسلسلي غير موجود في المرجع حالياً\n"
             "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
             f"BY: AZZAM\nThank You {CREDIT}"
@@ -179,6 +167,5 @@ if __name__ == '__main__':
     keep_alive()
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler('start', start))
-    app.add_handler(CallbackQueryHandler(handle_callback, pattern="show_wallet"))
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle))
     app.run_polling()
