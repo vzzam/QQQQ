@@ -11,6 +11,7 @@ from keep_alive import keep_alive
 # 🔴 الإعدادات الأساسية
 # ==========================================
 TOKEN = "7976756950:AAGs4odFu9fABU0nYNUnuCUJyB4QIdINgS4"
+SUPPORT_WALLET = "0x9BCEA3b53E276A2340D65a04620Cbf9d901B6617" # محفظة الدعم الخاصة بك
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -74,11 +75,10 @@ PS5_DB = {
 }
 
 # ==========================================
-# 🛠️ الدوال المساعدة وتحديث الثغرات (Exploits)
+# 🛠️ الدوال المساعدة
 # ==========================================
 def get_exploits(v):
     lines = []
-    # تخصيص ظهور ثغرات اليوزرمود فقط لكل إصدار بناءً على شروطك
     if 1.00 <= v <= 1.14:
         lines = ["🌐 Webkit : ✅"]
     elif 2.00 <= v <= 2.70:
@@ -110,7 +110,6 @@ def analyze(text):
     if not match: return None
 
     full_ser = match.group(1)
-
     origin = "Unknown"
     char = full_ser[4] if len(full_ser) > 4 else ""
     origins = {'F': "China 🇨🇳", 'E': "China 🇨🇳", 'K': "Japan 🇯🇵", 'M': "Malaysia 🇲🇾", 'G': "Global 🌐", 'V': "Global 🌐"}
@@ -140,15 +139,13 @@ def analyze(text):
         model = "Pro (CFI-71)" if "X25" in ref_key or "X26" in ref_key else "Fat/Pro"
 
     m_map = {'1':'January','2':'February','3':'March','4':'April','5':'May','6':'June','7':'July','8':'August','9':'September','A':'October','B':'November','C':'December'}
-
     year_char = full_ser[-2] if len(full_ser) >= 2 else ""
     production_year = f"202{year_char}" if year_char.isdigit() else "Unknown"
-
     month_char = full_ser[-1] if len(full_ser) >= 1 else ""
     production_month = m_map.get(month_char, "Unknown")
 
     return (
-        f"<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
+        f"<b> Councilor 𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
         f"𝐒𝐞𝐫𝐢𝐚𝐥 📦:\n<code>{full_ser}</code>\n"
         f"𝐅𝐢𝐫𝐦𝐰𝐚𝐫𝐞 🔢:\n{found_fw} {'✅' if min_v <= 12.70 else '❌'}\n"
         f"𝐌𝐨𝐝𝐞𝐥 🎮 :\n{model}\n"
@@ -156,25 +153,19 @@ def analyze(text):
         f"𝐃𝐚𝐭𝐞 𝐨𝐟 𝐩𝐫𝐨𝐝𝐮𝐜𝐭𝐢𝐨𝐧 📅 :\n{production_month} {production_year}\n"
         f"𝐒𝐭𝐚𝐭𝐮𝐬 📊:\n{'SUPPORT ✅' if min_v <= 12.70 else 'UNSUPPORTED ❌'}\n\n"
         f"𝐄𝐱𝐩𝐥𝐨𝐢𝐭 𝐀𝐯𝐚𝐢𝐥𝐚𝐛𝐢𝐥𝐢𝐭𝐲 🔓:\n╭─────────────╮\n{get_exploits(min_v)}\n╰─────────────╯\n\n"
+        f"𝐃𝐨𝐧𝐚𝐭𝐞/𝐒𝐮𝐩𝐩𝐨𝐫𝐭 💎:\n<code>{SUPPORT_WALLET}</code>\n\n"
         f"BY: AZZAM\n\nThank You {CREDIT}"
     )
 
 # ==========================================
 # 🚀 المعالجات (Handlers)
 # ==========================================
-async def delete_msg_job(context: ContextTypes.DEFAULT_TYPE):
-    """دالة لحذف الرسائل تلقائياً في المجموعات"""
-    job = context.job
-    try:
-        await context.bot.delete_message(chat_id=job.chat_id, message_id=job.data)
-    except Exception as e:
-        logging.warning(f"Could not delete message: {e}")
-
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = (
-        "<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
+        "<b> Councilor 𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
         "📥 Send the Serial Number (e.g., S01-F447).\n"
         "ارسل السيريال نمبر الموجود أسفل كرتون الجهاز.\n\n"
+        f"💎 Donate/Support للدعم:\n<code>{SUPPORT_WALLET}</code>\n\n"
         f"Thank You {CREDIT}"
     )
     await update.message.reply_text(msg, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
@@ -188,10 +179,11 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     res = analyze(raw)
     if res == "ERR":
         text = (
-            "<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
+            "<b> Councilor 𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
             "❌ الرقم التسلسلي غير موجود في المرجع حالياً\n"
             "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
-            "BY: AZZAM\n"
+            f"𝐃𝐨𝐧𝐚𝐭𝐞/𝐒𝐮𝐩𝐩𝐨𝐫𝐭 💎:\n<code>{SUPPORT_WALLET}</code>\n\n"
+            f"BY: AZZAM\n"
             f"Thank You {CREDIT}"
         )
     elif res:
@@ -200,9 +192,8 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     sent = await update.message.reply_text(text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
 
-    # حذف تلقائي في المجموعات بعد ساعة (3600 ثانية)
     if update.effective_chat.type in ["group", "supergroup"]:
-        context.job_queue.run_once(delete_msg_job, 3600, chat_id=sent.chat_id, data=sent.message_id)
+        context.job_queue.run_once(lambda c: c.bot.delete_message(sent.chat_id, sent.message_id), 3600)
 
 if __name__ == '__main__':
     keep_alive()
