@@ -2,17 +2,15 @@ import logging
 import re
 import asyncio
 import os
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update
 from telegram.constants import ParseMode
-from telegram.ext import Application, ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
+from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 from keep_alive import keep_alive
 
 # ==========================================
 # 🔴 الإعدادات الأساسية
 # ==========================================
-# التوكن يتم سحبه بأمان من سيرفر Render لمنع الاختراق
 TOKEN = os.getenv("BOT_TOKEN")
-KOFI_URL = "https://ko-fi.com/vzzam" 
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -84,20 +82,24 @@ def get_exploits(v):
 
 def analyze(text):
     text = text.upper().replace(" ", "").strip()
+    # استخراج أول 8 رموز (S01-XXXX) للتعامل معها كمرجع صارم
     match = re.search(r'(S0[A-Z0-9-]{5,6})', text)
     if not match: return None
     
     full_ser = match.group(1)
     
+    # 1. تحديد الدولة بناءً على الحرف الرابع
     origin = "Unknown"
     char = full_ser[4] if len(full_ser) > 4 else ""
-    origins = {'F': "China 🇨🇳", 'E': "China 🇨🇳", 'K': "Japan 🇯🇵", 'M': "Malaysia 🇲🇾", 'G': "Global 🌐", 'V': "Global 🌐"}
+    origins = {'F': "China 🇨🇳", 'E': "China 🇨🇳", 'K': "Japan 🇯🇵", 'M': "Malaysia 🇲🇾", 'G': "Global 🌐"}
     origin = origins.get(char, "Unknown")
 
+    # 2. تحويل السيريال لمفتاح مرجعي (استبدال حرف الدولة بـ X)
     ref_key = full_ser
     if char.isalpha():
         ref_key = full_ser[:4] + "X" + full_ser[5:]
 
+    # 3. البحث في قاعدة البيانات عن الفيرموير
     found_fw = None
     for k in sorted(PS5_DB.keys(), key=len, reverse=True):
         if ref_key.startswith(k) or full_ser.startswith(k):
@@ -110,6 +112,7 @@ def analyze(text):
         min_v = float(re.findall(r'(\d+\.\d+)', str(found_fw).split('/')[0])[0])
     except: min_v = 99.99
 
+    # 4. تحديد الموديل بناءً على الرموز المرجعية
     model = "Fat"
     if "X4" in ref_key or "X3" in ref_key: model = "Slim (CFI-20)"
     elif "X5" in ref_key: model = "Slim (CFI-21)"
@@ -117,6 +120,7 @@ def analyze(text):
     elif "X2" in ref_key:
         model = "Pro (CFI-71)" if "X25" in ref_key else "Fat/Pro"
 
+    # 5. تحديد تاريخ الإنتاج (القبل الأخير سنة، الأخير شهر)
     m_map = {'1':'January','2':'February','3':'March','4':'April','5':'May','6':'June','7':'July','8':'August','9':'September','A':'October','B':'November','C':'December'}
     
     year_char = full_ser[-2] if len(full_ser) >= 2 else ""
@@ -126,7 +130,7 @@ def analyze(text):
     production_month = m_map.get(month_char, "Unknown")
 
     return (
-        f"<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
+        f"<b> Councilor 𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
         f"𝐒𝐞𝐫𝐢𝐚𝐥 📦:\n<code>{full_ser}</code>\n"
         f"𝐅𝐢𝐫𝐦𝐰𝐚𝐫𝐞 🔢:\n{found_fw} {'✅' if min_v <= 11.00 else '❌'}\n"
         f"𝐌𝐨𝐝𝐞𝐥 🎮 :\n{model}\n"
@@ -140,12 +144,9 @@ def analyze(text):
 # ==========================================
 # 🚀 المعالجات (Handlers)
 # ==========================================
-def get_support_kb():
-    return InlineKeyboardMarkup([[InlineKeyboardButton("💎 Donate", url=KOFI_URL)]])
-
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = (
-        "<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
+        "<b>Components 𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
         "📥 Send the Serial Number found on the bottom of the box.\n"
         "ارسل السيريال نمبر الموجود أسفل كرتون الجهاز.\n\n"
         "📝 Examples / أمثلة:\n"
@@ -154,18 +155,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "<code>S01-G44A (Fat)</code>\n\n"
         f"Thank You {CREDIT}"
     )
-    await update.message.reply_text(msg, parse_mode=ParseMode.HTML, reply_markup=get_support_kb(), disable_web_page_preview=True)
+    await update.message.reply_text(msg, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
 
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text: return
     raw = update.message.text.upper().strip()
     
+    # فلترة صارمة: تجاهل أي رسالة لا تبدأ بـ S0
     if not raw.startswith("S0"): return
 
     res = analyze(raw)
     if res == "ERR":
         text = (
-            "<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
+            "<b>🎛️ 𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
             "❌ الرقم التسلسلي غير صحيح\n"
             "يرجى التأكد من كتابة الرقم الموجود أسفل كرتون الجهاز بشكل صحيح.\n\n"
             "❌ Serial number incorrect\n"
@@ -174,30 +176,18 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "BY: AZZAM\n"
             f"Thank You {CREDIT}"
         )
-        await update.message.reply_text(text, parse_mode=ParseMode.HTML, reply_markup=get_support_kb(), disable_web_page_preview=True)
     elif res:
-        sent = await update.message.reply_text(res, parse_mode=ParseMode.HTML, reply_markup=get_support_kb(), disable_web_page_preview=True)
-        if update.effective_chat.type in ["group", "supergroup"]:
-            context.job_queue.run_once(lambda c: c.bot.delete_message(sent.chat_id, sent.message_id), 3600)
+        text = res
+    else: return
 
-async def post_init(application: Application):
-    await application.bot.set_my_short_description(
-        "𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮\n"
-        "📥 ارسل السيريال نمبر الموجود أسفل كرتون الجهاز."
-    )
-    await application.bot.set_my_description(
-        "𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮\n\n"
-        "📥 Send the Serial Number (e.g., S01-F447).\n"
-        "ارسل السيريال نمبر الموجود أسفل كرتون الجهاز.\n\n"
-        "Thank You @qtr_703"
-    )
+    sent = await update.message.reply_text(text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+    
+    if update.effective_chat.type in ["group", "supergroup"]:
+        context.job_queue.run_once(lambda c: c.bot.delete_message(sent.chat_id, sent.message_id), 3600)
 
 if __name__ == '__main__':
-    if not TOKEN:
-        logging.error("BOT_TOKEN is not set! Please add it to your Environment Variables.")
-    else:
-        keep_alive()
-        app = ApplicationBuilder().token(TOKEN).post_init(post_init).build()
-        app.add_handler(CommandHandler('start', start))
-        app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle))
-        app.run_polling()
+    keep_alive()
+    app = ApplicationBuilder().token(TOKEN).build()
+    app.add_handler(CommandHandler('start', start))
+    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle))
+    app.run_polling()
