@@ -161,8 +161,8 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(text, parse_mode=ParseMode.HTML, reply_markup=get_support_kb(), disable_web_page_preview=True)
     elif res:
         sent = await update.message.reply_text(res, parse_mode=ParseMode.HTML, reply_markup=get_support_kb(), disable_web_page_preview=True)
-        if update.effective_chat.type in ["group", "supergroup"]:
-            context.job_queue.run_once(lambda c: c.bot.delete_message(sent.chat_id, sent.message_id), 3600)
+        #if update.effective_chat.type in ["group", "supergroup"]:
+        #    context.job_queue.run_once(lambda c: c.bot.delete_message(sent.chat_id, sent.message_id), 3600)
 
 if __name__ == '__main__':
     if not TOKEN:
