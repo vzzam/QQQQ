@@ -10,7 +10,7 @@ from keep_alive import keep_alive
 # ==========================================
 # 🔴 الإعدادات الأساسية
 # ==========================================
-TOKEN = "7976756950:AAGs4odFu9fABU0nYNUnuCUJyB4QIdINgS4"
+TOKEN = ""
 KOFI_URL = "https://ko-fi.com/vzzam" 
 
 logging.basicConfig(
