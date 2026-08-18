@@ -4,15 +4,13 @@ import asyncio
 import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
-from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
+from telegram.ext import Application, ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 from keep_alive import keep_alive
 
 # ==========================================
 # 🔴 الإعدادات الأساسية
 # ==========================================
-# 🔒 التوكن الآن مشفر ويتم استدعاؤه من متغيرات البيئة في السيرفر
 TOKEN = os.getenv("BOT_TOKEN")
-
 KOFI_URL = "https://ko-fi.com/vzzam" 
 
 logging.basicConfig(
@@ -165,12 +163,31 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if update.effective_chat.type in ["group", "supergroup"]:
             context.job_queue.run_once(lambda c: c.bot.delete_message(sent.chat_id, sent.message_id), 3600)
 
+# ==========================================
+# 🛠️ ضبط إعدادات البوت تلقائياً عند التشغيل
+# ==========================================
+async def post_init(application: Application):
+    # تعيين النبذة المختصرة (Bio / Short Description)
+    await application.bot.set_my_short_description(
+        "🎮 أداة احترافية لفحص إصدار وإمكانية تعديل (Jailbreak) أجهزة PS5 عبر الرقم التسلسلي | المطور: @qtr_703"
+    )
+    # تعيين الوصف الشامل (Description)
+    await application.bot.set_my_description(
+        "مرحباً بك في بوت 𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮\n\n"
+        "هذا البوت مصمم لمساعدتك في فحص أجهزة البلايستيشن 5 ومعرفة تفاصيلها الدقيقة (إصدار النظام المتوقع، الموديل، وتاريخ الصنع) لمعرفة إمكانية التعديل، وذلك من خلال الرقم التسلسلي (Serial Number) فقط.\n\n"
+        "📥 للبدء، أرسل السيريال نمبر الموجود أسفل كرتون الجهاز (مثال: S01-F447).\n\n"
+        "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
+        "تطوير: AZZAM\n"
+        "للتواصل والدعم: @qtr_703"
+    )
+
 if __name__ == '__main__':
     if not TOKEN:
         logging.error("BOT_TOKEN is not set! Please add it to your Environment Variables.")
     else:
         keep_alive()
-        app = ApplicationBuilder().token(TOKEN).build()
+        # إضافة post_init ليعمل فور التشغيل
+        app = ApplicationBuilder().token(TOKEN).post_init(post_init).build()
         app.add_handler(CommandHandler('start', start))
         app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle))
         app.run_polling()
