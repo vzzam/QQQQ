@@ -10,7 +10,9 @@ from keep_alive import keep_alive
 # ==========================================
 # 🔴 الإعدادات الأساسية
 # ==========================================
-TOKEN = ""
+# 🔒 التوكن الآن مشفر ويتم استدعاؤه من متغيرات البيئة في السيرفر
+TOKEN = os.getenv("BOT_TOKEN")
+
 KOFI_URL = "https://ko-fi.com/vzzam" 
 
 logging.basicConfig(
@@ -164,8 +166,11 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
             context.job_queue.run_once(lambda c: c.bot.delete_message(sent.chat_id, sent.message_id), 3600)
 
 if __name__ == '__main__':
-    keep_alive()
-    app = ApplicationBuilder().token(TOKEN).build()
-    app.add_handler(CommandHandler('start', start))
-    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle))
-    app.run_polling()
+    if not TOKEN:
+        logging.error("BOT_TOKEN is not set! Please add it to your Environment Variables.")
+    else:
+        keep_alive()
+        app = ApplicationBuilder().token(TOKEN).build()
+        app.add_handler(CommandHandler('start', start))
+        app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle))
+        app.run_polling()
