@@ -5,13 +5,14 @@ import os
 import json
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
-from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters, CallbackQueryHandler
+from telegram.ext import Application, ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters, CallbackQueryHandler
 from keep_alive import keep_alive
 
 # ==========================================
 # 🔴 الإعدادات الأساسية
 # ==========================================
 TOKEN = os.getenv("BOT_TOKEN")
+KOFI_URL = "https://ko-fi.com/vzzam"
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -20,7 +21,6 @@ logging.basicConfig(
 
 X_URL = "https://x.com/qtr_703?s=21"
 CREDIT = f'<a href="{X_URL}">@qtr_703</a>'
-KOFI_URL = "https://ko-fi.com/vzzam"
 
 # ==========================================
 # 📊 نظام الإحصائيات
@@ -157,7 +157,6 @@ PS5_DB = {
 # 🛠️ الدوال المساعدة
 # ==========================================
 def get_exploits(v):
-    # Kernel Exploits
     kernels = []
     if 3.00 <= v <= 4.51:
         kernels.append("IPV6")
@@ -177,7 +176,6 @@ def get_exploits(v):
     kernel_str = ", ".join(kernels) if kernels else "None ❌"
     lines = [f"🧠 Kernel  : {kernel_str}"]
 
-    # Usermode Exploits
     if 1.00 <= v <= 13.60:
         lines.append("🌐 WebKit  : ✅")
     if 3.00 <= v <= 13.60:
@@ -197,7 +195,6 @@ def get_exploits(v):
     if 4.00 <= v <= 12.40:
         lines.append("📺 Netflix : ✅")
 
-    # Features
     if 3.00 <= v <= 13.60:
         lines.append("⚙️ Features: EtaHEN | Kstuff | HV | Linux ✅")
     elif 2.00 <= v <= 2.70:
@@ -214,7 +211,6 @@ def get_exploits(v):
 def analyze(text):
     text = text.upper().replace(" ", "").strip()
 
-    # دعم إدخال السيريال بدون شرطة مثل S01F447
     if re.match(r'^S01[A-Z0-9]{4,}', text):
         text = "S01-" + text[3:]
 
@@ -227,7 +223,6 @@ def analyze(text):
 
     full_ser = match.group(1)
 
-    # 1. تحديد الدولة والمفتاح المرجعي وتاريخ الإنتاج
     origins = {
         'F': "China 🇨🇳",
         'E': "China 🇨🇳",
@@ -269,7 +264,6 @@ def analyze(text):
         origin = "Unknown"
         production_date = "Unknown"
 
-    # 2. البحث في قاعدة البيانات عن الفيرموير
     found_fw = PS5_DB.get(ref_key) or PS5_DB.get(full_ser)
     if not found_fw:
         for k in sorted(PS5_DB.keys(), key=len, reverse=True):
@@ -285,7 +279,6 @@ def analyze(text):
     except Exception:
         min_v = 99.99
 
-    # 3. تحديد الموديل بدقة حسب جدول الدليل
     model = "Fat (CFI-10)"
     if full_ser.startswith("AJ") or full_ser.startswith("F"):
         model = "Fat (CFI-10)"
@@ -305,7 +298,6 @@ def analyze(text):
         elif code == "5":
             model = "Slim (CFI-21)"
 
-    # 4. حالة الدعم (حتى 13.60 مدعوم بالكامل، 14.00-14.10 قيد الانتظار)
     is_supported = min_v <= 13.60
     is_pending = 14.00 <= min_v <= 14.10
 
@@ -331,6 +323,14 @@ def analyze(text):
         f"BY: AZZAM\n\nThank You {CREDIT}"
     )
     return result_text, is_supported
+
+# ==========================================
+# 🔘 الأزرار التفاعلية والدعم
+# ==========================================
+def get_support_kb():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("💎 Donate", url=KOFI_URL)]
+    ])
 
 def get_keyboard(is_supported=False):
     keys = []
@@ -358,7 +358,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "<code>S01-G338 (Fat)  | AJ1489 (USA)</code>\n\n"
         f"Thank You {CREDIT}"
     )
-    await update.message.reply_text(msg, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+    await update.message.reply_text(
+        msg,
+        parse_mode=ParseMode.HTML,
+        reply_markup=get_keyboard(True),
+        disable_web_page_preview=True
+    )
 
 async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
@@ -401,15 +406,26 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "BY: AZZAM\n"
             f"Thank You {CREDIT}"
         )
-        await update.message.reply_text(text, parse_mode=ParseMode.HTML, reply_markup=get_keyboard(False), disable_web_page_preview=True)
+        await update.message.reply_text(
+            text,
+            parse_mode=ParseMode.HTML,
+            reply_markup=get_support_kb(),
+            disable_web_page_preview=True
+        )
     elif res:
-        await update.message.reply_text(res, parse_mode=ParseMode.HTML, reply_markup=get_keyboard(is_supported), disable_web_page_preview=True)
+        sent = await update.message.reply_text(
+            res,
+            parse_mode=ParseMode.HTML,
+            reply_markup=get_keyboard(is_supported),
+            disable_web_page_preview=True
+        )
+        # if update.effective_chat.type in ["group", "supergroup"]:
+        #     context.job_queue.run_once(lambda c: c.bot.delete_message(sent.chat_id, sent.message_id), 3600)
 
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
-    # قائمة اختيار اللغة
     if query.data in ["guide", "tools"]:
         lang_kb = InlineKeyboardMarkup([
             [
@@ -422,16 +438,21 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=lang_kb
         )
 
-    # خيارات الشرح
     elif query.data == "guide_ar":
         text = (
             "<b>📖 خطوات التعديل الأساسية:</b>\n\n"
             "1️⃣ لا تقم بتوصيل الجهاز بالإنترنت فور تشغيله.\n"
             "2️⃣ اذهب إلى الإعدادات > النظام > إيقاف التحديثات التلقائية.\n"
             "3️⃣ استخدم سلسلة الثغرة المناسبة لإصدارك (مثل WebKit / BD-JB / Y2JB / Lua مع RELAPSE أو Kqueueex).\n\n"
-            "⚠️ <i>ملاحظة: إصدارات Slim/Pro الرقمية (Digital) تتطلب أحدث تحديث لربط قارئ الأقراص الخارجي.</i>"
+            "⚠️ <i>ملاحظة: إصدارات Slim/Pro الرقمية (Digital) تتطلب أحدث تحديث لربط قارئ الأقراص الخارجي.</i>\n\n"
+            f"Thank You {CREDIT}"
         )
-        await query.message.reply_text(text, parse_mode=ParseMode.HTML)
+        await query.message.reply_text(
+            text,
+            parse_mode=ParseMode.HTML,
+            reply_markup=get_support_kb(),
+            disable_web_page_preview=True
+        )
 
     elif query.data == "guide_en":
         text = (
@@ -439,35 +460,64 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "1️⃣ Do NOT connect the console to the internet upon first startup.\n"
             "2️⃣ Go to Settings > System > Disable Automatic Updates.\n"
             "3️⃣ Use the exploit chain matching your firmware (e.g., WebKit / BD-JB / Y2JB / Lua with RELAPSE or Kqueueex).\n\n"
-            "⚠️ <i>Note: Digital Slim/Pro consoles require PSN and the latest firmware to pair an external disc drive.</i>"
+            "⚠️ <i>Note: Digital Slim/Pro consoles require PSN and the latest firmware to pair an external disc drive.</i>\n\n"
+            f"Thank You {CREDIT}"
         )
-        await query.message.reply_text(text, parse_mode=ParseMode.HTML)
+        await query.message.reply_text(
+            text,
+            parse_mode=ParseMode.HTML,
+            reply_markup=get_support_kb(),
+            disable_web_page_preview=True
+        )
 
-    # خيارات الأدوات
     elif query.data == "tools_ar":
         text = (
             "<b>🧰 روابط أدوات التعديل (المصادر الرسمية):</b>\n\n"
             "🔗 <a href='https://github.com/'>EtaHEN & Kstuff</a>\n"
             "🔗 <a href='https://github.com/'>BD-JB / Y2JB / Lua Tools</a>\n\n"
-            "<i>(ملاحظة: سيتم إضافة الروابط المباشرة الدقيقة قريباً)</i>"
+            "<i>(ملاحظة: سيتم إضافة الروابط المباشرة الدقيقة قريباً)</i>\n\n"
+            f"Thank You {CREDIT}"
         )
-        await query.message.reply_text(text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+        await query.message.reply_text(
+            text,
+            parse_mode=ParseMode.HTML,
+            reply_markup=get_support_kb(),
+            disable_web_page_preview=True
+        )
 
     elif query.data == "tools_en":
         text = (
             "<b>🧰 Jailbreak Tools Links (Official Sources):</b>\n\n"
             "🔗 <a href='https://github.com/'>EtaHEN & Kstuff</a>\n"
             "🔗 <a href='https://github.com/'>BD-JB / Y2JB / Lua Tools</a>\n\n"
-            "<i>(Note: Exact direct links will be added soon)</i>"
+            "<i>(Note: Exact direct links will be added soon)</i>\n\n"
+            f"Thank You {CREDIT}"
         )
-        await query.message.reply_text(text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+        await query.message.reply_text(
+            text,
+            parse_mode=ParseMode.HTML,
+            reply_markup=get_support_kb(),
+            disable_web_page_preview=True
+        )
+
+async def post_init(application: Application):
+    await application.bot.set_my_short_description(
+        "𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮\n"
+        "📥 ارسل السيريال نمبر الموجود أسفل كرتون الجهاز."
+    )
+    await application.bot.set_my_description(
+        "𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮\n\n"
+        "📥 Send the Serial Number (e.g., S01-F447).\n"
+        "ارسل السيريال نمبر الموجود أسفل كرتون الجهاز.\n\n"
+        "Thank You @qtr_703"
+    )
 
 if __name__ == '__main__':
     if not TOKEN:
         logging.error("BOT_TOKEN is not set! Please add it to your Environment Variables.")
     else:
         keep_alive()
-        app = ApplicationBuilder().token(TOKEN).build()
+        app = ApplicationBuilder().token(TOKEN).post_init(post_init).build()
 
         app.add_handler(CommandHandler('start', start))
         app.add_handler(CommandHandler('stats', stats_command))
