@@ -1,6 +1,5 @@
 import logging
 import re
-import asyncio
 import os
 import json
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
@@ -146,4 +145,298 @@ PS5_DB = {
     "S01-X259": "11.60", "S01-X25A": "11.60/12.00", "S01-X25B": "12.00/12.02",
     "S01-X25C": "12.02/12.20",
 
-    # CFI
+    # CFI-71 Pro (2026)
+    "S01-X261": "12.40/12.60", "S01-X262": "12.40/12.60/12.70", "S01-X263": "12.60/12.70/13.00",
+    "S01-X264": "13.00/13.20", "S01-X265": "13.20", "S01-X266": "13.20/13.40",
+    "S01-X267": "13.42/13.60", "S01-X268": "13.60", "S01-X269": "13.60/14.00",
+    "S01-X26A": "14.10/14.20", "S01-X26B": "14.20/14.22"
+}
+
+# ==========================================
+# 🛠️ الدوال المساعدة
+# ==========================================
+def get_exploits(v):
+    kernels = []
+    if 3.00 <= v <= 4.51:
+        kernels.append("IPV6")
+    if 1.00 <= v <= 7.61:
+        kernels.append("UMTX")
+    if (2.00 <= v <= 2.70) or (4.00 <= v <= 10.01):
+        kernels.append("Lapse")
+    if 4.00 <= v <= 12.00:
+        kernels.append("NetControl")
+    if 10.20 <= v <= 12.70:
+        kernels.append("Kqueueex")
+    if 8.00 <= v <= 13.60:
+        kernels.append("RELAPSE")
+    if 14.00 <= v <= 14.10:
+        kernels.append("PROLAPSE ⏳")
+
+    lines = []
+    if not kernels:
+        lines.append("│ 🧠 Kernel : None ❌")
+    elif len(kernels) <= 2:
+        lines.append(f"│ 🧠 Kernel : {', '.join(kernels)}")
+    else:
+        lines.append("│ 🧠 Kernel :")
+        for i in range(0, len(kernels), 2):
+            lines.append(f"│ • {', '.join(kernels[i:i+2])}")
+
+    if 1.00 <= v <= 13.60:
+        lines.append("│ 🌐 WebKit : ✅")
+    if 3.00 <= v <= 13.60:
+        lines.append("│ 💿 BD-JB  : ✅")
+    if 2.00 <= v <= 14.22:
+        lines.append("│ 🎮 mast1c : ✅")
+    if 2.00 <= v <= 14.22:
+        lines.append("│ 🐍 Lua    : ✅")
+    if 2.00 <= v <= 13.60:
+        lines.append("│ 🧩 Yarpe  : ✅")
+    elif 14.00 <= v <= 14.22:
+        lines.append("│ 🧩 Yarpe  : ❓")
+    if 4.00 <= v <= 13.60:
+        lines.append("│ ☕ Y2JB   : ✅")
+    elif 14.00 <= v <= 14.22:
+        lines.append("│ ☕ Y2JB   : ❓")
+    if 4.00 <= v <= 12.40:
+        lines.append("│ 📺 Netflix: ✅")
+
+    etahen = "✅" if 2.00 <= v <= 13.60 else "❌"
+    kstuff = "✅" if 1.00 <= v <= 13.60 else "❌"
+    hv     = "✅" if 1.00 <= v <= 14.10 else "❌"
+    linux  = "✅" if 3.00 <= v <= 13.60 else "❌"
+
+    lines.append("├─────────────┤")
+    lines.append("│ ⚙️ Features :")
+    lines.append(f"│ • EtaHEN : {etahen}")
+    lines.append(f"│ • Kstuff : {kstuff}")
+    lines.append(f"│ • HV     : {hv}")
+    lines.append(f"│ • Linux  : {linux}")
+
+    return "\n".join(lines)
+
+def analyze(text):
+    text = text.upper().replace(" ", "").strip()
+
+    if re.match(r'^S01[A-Z0-9]{4,}', text):
+        text = "S01-" + text[3:]
+
+    match = re.search(
+        r'(S01-[A-Z][A-Z0-9]{3}|S01-\d{3,5}|AJ\d{4,5}|AK\d{3,5}|F10[0-9A-Z]{3,4}|F11301|F225)',
+        text
+    )
+    if not match:
+        return None
+
+    full_ser = match.group(1)
+
+    origins = {
+        'F': "China 🇨🇳",
+        'E': "China 🇨🇳",
+        'K': "Japan 🇯🇵",
+        'M': "Malaysia 🇲🇾",
+        'G': "Global 🌐",
+        'V': "Global 🌐"
+    }
+    m_map = {
+        '1': 'January', '2': 'February', '3': 'March', '4': 'April',
+        '5': 'May', '6': 'June', '7': 'July', '8': 'August',
+        '9': 'September', 'A': 'October', 'B': 'November', 'C': 'December'
+    }
+
+    ref_key = full_ser
+    if full_ser.startswith("S01-") and len(full_ser) == 8 and full_ser[4].isalpha():
+        char = full_ser[4]
+        origin = origins.get(char, "Unknown")
+        ref_key = full_ser[:4] + "X" + full_ser[5:]
+        year_char = full_ser[-2]
+        month_char = full_ser[-1]
+        production_year = f"202{year_char}" if year_char.isdigit() else "Unknown"
+        production_month = m_map.get(month_char, "Unknown")
+        production_date = f"{production_month} {production_year}"
+    elif full_ser.startswith("S01-"):
+        jp_prefixes = ("S01-1355", "S01-0272", "S01-0376", "S01-1517")
+        origin = "Japan 🇯🇵" if full_ser.startswith(jp_prefixes) else "UK / EU 🇪🇺"
+        production_date = "2020"
+    elif full_ser.startswith("AJ"):
+        origin = "USA 🇺🇸"
+        production_date = "2020–2021"
+    elif full_ser.startswith("AK"):
+        origin = "USA 🇺🇸"
+        production_date = "2021–2022"
+    elif full_ser.startswith("F"):
+        origin = "Spain / Australia 🇪🇸🇦🇺"
+        production_date = "2020–2021"
+    else:
+        origin = "Unknown"
+        production_date = "Unknown"
+
+    found_fw = PS5_DB.get(ref_key) or PS5_DB.get(full_ser)
+    if not found_fw:
+        for k in sorted(PS5_DB.keys(), key=len, reverse=True):
+            if ref_key.startswith(k) or full_ser.startswith(k):
+                found_fw = PS5_DB[k]
+                break
+
+    if not found_fw:
+        return "ERR"
+
+    try:
+        min_v = float(re.findall(r'(\d+\.\d+)', str(found_fw).split('/')[0])[0])
+    except Exception:
+        min_v = 99.99
+
+    model = "Fat (CFI-10)"
+    if full_ser.startswith("AJ") or full_ser.startswith("F"):
+        model = "Fat (CFI-10)"
+    elif full_ser.startswith("AK"):
+        model = "Fat (CFI-11)"
+    elif ref_key.startswith("S01-X") and len(ref_key) == 8:
+        code = ref_key[5]
+        year_digit = ref_key[6]
+        if code == "1":
+            model = "Pro (CFI-70)"
+        elif code == "2":
+            model = "Pro (CFI-71)" if year_digit in ("5", "6") else "Fat (CFI-11)"
+        elif code == "3":
+            model = "Fat (CFI-12)"
+        elif code == "4":
+            model = "Slim (CFI-20)"
+        elif code == "5":
+            model = "Slim (CFI-21)"
+
+    is_supported = min_v <= 13.60
+    is_pending = 14.00 <= min_v <= 14.10
+
+    if is_supported:
+        fw_icon = "✅"
+        status_text = "SUPPORT ✅"
+    elif is_pending:
+        fw_icon = "⏳"
+        status_text = "PENDING ⏳ (PROLAPSE)"
+    else:
+        fw_icon = "❌"
+        status_text = "UNSUPPORTED ❌"
+
+    return (
+        f"<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
+        f"𝐒𝐞𝐫𝐢𝐚𝐥 📦:\n<code>{full_ser}</code>\n"
+        f"𝐅𝐢𝐫𝐦𝐰𝐚𝐫𝐞 🔢:\n{found_fw} {fw_icon}\n"
+        f"𝐌𝐨𝐝𝐞𝐥 🎮 :\n{model}\n"
+        f"𝐌𝐚𝐝𝐞 𝐢𝐧 🏳️ :\n{origin}\n"
+        f"𝐃𝐚𝐭𝐞 𝐨𝐟 𝐩𝐫𝐨𝐝𝐮𝐜𝐭𝐢𝐨𝐧 📅 :\n{production_date}\n"
+        f"𝐒𝐭𝐚𝐭𝐮𝐬 📊:\n{status_text}\n\n"
+        f"𝐄𝐱𝐩𝐥𝐨𝐢𝐭 𝐀𝐯𝐚𝐢𝐥𝐚𝐛𝐢𝐥𝐢𝐭𝐲 🔓:\n╭─────────────╮\n{get_exploits(min_v)}\n╰─────────────╯\n\n"
+        f"BY: AZZAM\n\nThank You {CREDIT}"
+    )
+
+# ==========================================
+# 🔘 زر الدعم فقط
+# ==========================================
+def get_support_kb():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("💎 Donate", url=KOFI_URL)]
+    ])
+
+# ==========================================
+# 🚀 المعالجات (Handlers)
+# ==========================================
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg = (
+        "<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
+        "📥 Send the Serial Number found on the bottom of the box.\n"
+        "ارسل السيريال نمبر الموجود أسفل كرتون الجهاز.\n\n"
+        "📝 Examples / أمثلة:\n"
+        "<code>S01-E568 (Slim) | S01-F44A (Slim)</code>\n"
+        "<code>S01-K268 (Pro)  | S01-F148 (Pro)</code>\n"
+        "<code>S01-G338 (Fat)  | AJ1489 (USA)</code>\n\n"
+        f"Thank You {CREDIT}"
+    )
+    await update.message.reply_text(
+        msg,
+        parse_mode=ParseMode.HTML,
+        reply_markup=get_support_kb(),
+        disable_web_page_preview=True
+    )
+
+async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    username = update.effective_user.username
+    if username and username.lower() == "qtr_703":
+        stats = load_stats()
+        msg = (
+            "📊 <b>إحصائيات البوت الحالية:</b>\n\n"
+            f"👥 عدد المستخدمين الفريدين: <code>{len(stats['users'])}</code>\n"
+            f"🔍 إجمالي عمليات الفحص: <code>{stats['checks']}</code>\n"
+            "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
+            "🛡️ <i>هذه الإحصائيات تظهر لك أنت فقط.</i>"
+        )
+        await update.message.reply_text(msg, parse_mode=ParseMode.HTML)
+
+async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message or not update.message.text:
+        return
+    raw = update.message.text.upper().strip()
+
+    if not raw.startswith(("S0", "AJ", "AK", "F10", "F113", "F225")):
+        return
+
+    user_id = update.effective_user.id
+    stats = load_stats()
+    if user_id not in stats["users"]:
+        stats["users"].append(user_id)
+    stats["checks"] += 1
+    save_stats(stats)
+
+    res = analyze(raw)
+
+    if res == "ERR":
+        text = (
+            "<b>𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮</b>\n\n"
+            "❌ الرقم التسلسلي غير موجود في المرجع حالياً\n"
+            "يرجى التأكد من كتابة الرقم الموجود أسفل كرتون الجهاز بشكل صحيح.\n\n"
+            "❌ Serial number not found\n"
+            "Please ensure you enter the number from the bottom of the box correctly.\n\n"
+            "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
+            "BY: AZZAM\n"
+            f"Thank You {CREDIT}"
+        )
+        await update.message.reply_text(
+            text,
+            parse_mode=ParseMode.HTML,
+            reply_markup=get_support_kb(),
+            disable_web_page_preview=True
+        )
+    elif res:
+        sent = await update.message.reply_text(
+            res,
+            parse_mode=ParseMode.HTML,
+            reply_markup=get_support_kb(),
+            disable_web_page_preview=True
+        )
+        # if update.effective_chat.type in ["group", "supergroup"]:
+        #     context.job_queue.run_once(lambda c: c.bot.delete_message(sent.chat_id, sent.message_id), 3600)
+
+async def post_init(application: Application):
+    await application.bot.set_my_short_description(
+        "𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮\n"
+        "📥 ارسل السيريال نمبر الموجود أسفل كرتون الجهاز."
+    )
+    await application.bot.set_my_description(
+        "𝐏𝐒𝟓𝐀𝐙 𝐉𝐀𝐈𝐋𝐁𝐑𝐄𝐀𝐊 𝐂𝐇𝐄𝐂𝐊𝐄𝐑 🎮\n\n"
+        "📥 Send the Serial Number (e.g., S01-F447).\n"
+        "ارسل السيريال نمبر الموجود أسفل كرتون الجهاز.\n\n"
+        "Thank You @qtr_703"
+    )
+
+if __name__ == '__main__':
+    if not TOKEN:
+        logging.error("BOT_TOKEN is not set! Please add it to your Environment Variables.")
+    else:
+        keep_alive()
+        app = ApplicationBuilder().token(TOKEN).post_init(post_init).build()
+
+        app.add_handler(CommandHandler('start', start))
+        app.add_handler(CommandHandler('stats', stats_command))
+        app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle))
+
+        app.run_polling()
